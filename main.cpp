@@ -1,3 +1,6 @@
+// By Mason
+// Using Snake Case as the naming convention, C++ as the language, SFML as the graphical library, and Visual Studio as the IDE
+
 #include <iostream>
 #include <vector>
 #include <SFML/Audio.hpp>
@@ -6,15 +9,17 @@
 
 sf::Texture apple_texture;
 
+
 int main()
 {
     // identifiers
-    sf::Sprite rand_apple(sf::Sprite the_apple_texture);
+    sf::Sprite rand_apple(sf::Sprite the_apple_sprite);
 
     // create the window
-    sf::RenderWindow window(sf::VideoMode({ 800, 800 }), "My window");
+    sf::RenderWindow window(sf::VideoMode({ 800, 800 }), "Snake");
 
-    /*Map::Start*/
+
+    /*Map--Start*/
     //map border
     sf::RectangleShape map_border({ 800.f, 800.f });
     map_border.setFillColor(sf::Color(87, 138, 52));
@@ -45,19 +50,24 @@ int main()
         }
         tile.move({ tile_width * -17, tile_height });
     }
-    /*Map::End*/
+    /*Map--End*/
 
-
-    //make apple
-    
+    /*Apple--Start*/
     if (!apple_texture.loadFromFile("apple.png")) {
-        return -1; // Error loading texture
+        return -1; 
     }
-    sf::Sprite the_apple_sprite;
-    the_apple_sprite.setTexture(apple_texture);
+    sf::Sprite apple_sprite(apple_texture);
+    apple_texture.setSmooth(true);
+    apple_sprite.setPosition({ -40 + 19.5 + (13 * 44), 70 + -25 + (8 * 44) });
 
-    the_apple_sprite.setSmooth(true);
+    sf::Vector2u texture_size = apple_texture.getSize();
 
+    // Calculate the scale factors
+    float scale_x = 50.f / texture_size.x;
+    float scale_y = 70.f / texture_size.y;
+
+    apple_sprite.setScale({ scale_x, scale_y });
+    /*Apple--End*/
 
     // run the program as long as the window is open
     while (window.isOpen())
@@ -77,14 +87,19 @@ int main()
         window.draw(map_border);
         window.draw(header_rectangle);
 
-        // map 
+        // draw map 
         // for tile (immutable) in{ : } map_tiles -> loop
         for (const sf::RectangleShape& tile : map_tiles) {
             window.draw(tile);
         }
-        rand_apple();
-        window.draw(rand_apple(apple_texture));
 
+
+
+        /*window.draw(apple_sprite);
+        once snake == apple{
+            window.draw(rand_apple(apple_sprite));
+        } */
+        
         
 
         // end the current frame
@@ -92,40 +107,32 @@ int main()
     }
 }
 
-sf::Sprite rand_apple(sf::Texture the_apple_texture) {
+sf::Sprite rand_apple(sf::Sprite the_apple_sprite) {
    /* fancy fucking random shit*/
     // Create a random device and seed the random number generator
     std::random_device rd;
     std::mt19937 gen(rd());
 
     // Define the range [0, 15]
-    std::uniform_int_distribution<> distrib(0, 15);
+    std::uniform_int_distribution<> distrib_y(1, 15);
 
     // Generate and print a random number in the range [0, 15]
-    int random_number = distrib(gen);
+    float random_y = distrib_y(gen);
+
+    // rando y
+    std::uniform_int_distribution<> distrib_x(1, 17);
+    float random_x = distrib_x(gen);
 
 
-    float random_x = 12;
-       float random_y = 12;
-    
-    float starting_x = -40; // adjust
+
+    float starting_x = -40; 
     float starting_y = 70; 
 
-    float center_x = 22;
-    float center_y = -20;
+    float center_x = 19.5;
+    float center_y = -25;
     
-    
-
-    sf::Vector2u textureSize = the_apple_texture.getSize();
-
-    // Calculate the scale factors
-    float scaleX = 44.f / textureSize.x;
-
-    // Use the smaller scale factor to maintain the aspect ratio
-    the_apple_sprite.setScale(scaleX, scaleX);
-
-
-
     the_apple_sprite.setPosition({ starting_x + center_x + (random_x * 44), starting_y + center_y + (random_y * 44) });
+    
+    return the_apple_sprite;
 }
 
