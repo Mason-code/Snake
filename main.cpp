@@ -16,6 +16,7 @@ to place the snake exactly on a tile center.
 #include <SFML/Graphics.hpp>
 #include <random>
 #include <math.h>
+#include <cmath>
 
 
 //global
@@ -142,7 +143,9 @@ int main()
         move_snake(snake_head);
         //snake_head.move(sf::Vector2f(2, 0));
         window.draw(snake_head);
+
        
+        //std::cout << at_center_turn_point << "\n";
 
         //snake_head.move(sf::Vector2f(0, 1));
 
@@ -193,27 +196,42 @@ sf::CircleShape move_snake(sf::CircleShape &the_snake_circle) {
 
     sf::Vector2f get_current_tile(sf::CircleShape item);
     sf::Vector2f get_center_position_of_tile(int x_tile, int y_tile);
-
-
     
 
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left) && x_velocity != 1 && (!need_turn_down || !need_turn_right || !need_turn_up)) {
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left) && x_velocity != -0.5 && x_velocity != 0.5) {
         need_turn_left = true;
+        need_turn_right = false;
+        need_turn_up = false;
+        need_turn_down = false;
     }
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right) && x_velocity != -1 && (!need_turn_down || !need_turn_left || !need_turn_up)) {
+  
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right) && x_velocity != 0.5 && x_velocity != -0.5) {
         need_turn_right = true;
+        need_turn_up = false;
+        need_turn_down = false;
+        need_turn_left = false;
     }
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up) && y_velocity != 1 && (!need_turn_down || !need_turn_right || !need_turn_left)) {
+ 
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up) && y_velocity != -0.5 && y_velocity != 0.5) {
         need_turn_up = true;
+        need_turn_down = false;
+        need_turn_left = false;
+        need_turn_right = false;
     }
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down) && y_velocity != -1 && (!need_turn_left || !need_turn_right || !need_turn_up)) {
+
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down) && y_velocity != 0.5 && y_velocity != -0.5) {
         need_turn_down = true;
+        need_turn_left = false;
+        need_turn_right = false;
+        need_turn_up = false;
+        
     }
+   
 
     //top-left corner
-    sf::Vector2f position = the_snake_circle.getPosition();
+    sf::Vector2f current_position = the_snake_circle.getPosition();
 
-    int x_pos = ceil(position.x) + 20;
+    /*int x_pos = ceil(position.x) + 20;
     int y_pos = ceil(position.y) + 20;
 
 
@@ -223,38 +241,63 @@ sf::CircleShape move_snake(sf::CircleShape &the_snake_circle) {
     sf::Vector2f center = get_center_position_of_tile(current_tile.x, current_tile.y);
 
     int x_center_pos = center.x;;
-    int y_center_pos = center.y;
+    int y_center_pos = center.y;*/
 
+
+    /*   std::cout << "\n\n\n";
+    std::cout << current_tile.x << " -> " << +current_tile.y << "\n";
+    std::cout << center.x << " and " << center.y << "\n";
+    std::cout << "\n\n\n";*/
 
     // 1 is true; 0 is false
-    bool at_center_turn_point = x_pos == x_center_pos && y_pos == y_center_pos;
+    /*
+    I can't do it this way, so I need to use the special float mod thing from <cmath> 
+    float x_pos = (((position.x + 20) - 25) % 17);
+    double y_pos = (((position.y + 20) - 105) % 15);
+    */
+    sf::Vector2f current_tile = get_current_tile(the_snake_circle);
+
+    sf::Vector2f center_position = get_center_position_of_tile(current_tile.x, current_tile.y);
+    
+    // epsilon tolerance
+    float epsilon = 0.1f;
+    bool at_center_turn_point =
+        std::abs(center_position.x - (current_position.x + 20)) < epsilon &&
+        std::abs(center_position.y - (current_position.y + 20)) < epsilon;
+
 
     //std::cout << at_center_turn_point << "\n";
-    std::cout << "\n\n\n";
+    std::cout << need_turn_up << " | " << need_turn_down << " | " << need_turn_left << " | " << need_turn_right << "\n";
+
+    /*if (center_position.x == (current_position.x + 20) && center_position.y == (current_position.y + 20)) {
+        std::cout << at_center_turn_point << "\n";
+    }*/
+
+    /*std::cout << "\n\n\n";
     std::cout << x_pos << " -> " <<  + x_center_pos << "\n";
     std::cout << y_pos << " -> " << + y_center_pos <<  "\n";
-    std::cout << "\n\n\n";
+    std::cout << "\n\n\n";*/
 
-    if (need_turn_up && at_center_turn_point) {
-        y_velocity = -1;
+    if ((need_turn_up && at_center_turn_point && y_velocity != 0.5) || (y_velocity == -0.5)) {
+        y_velocity = -0.5;
         x_velocity = 0;
         need_turn_up = false;
     }
 
-    if (need_turn_down && at_center_turn_point) {
-        y_velocity = 1;
+    if ((need_turn_down && at_center_turn_point && y_velocity != -0.5) || (y_velocity == 0.5)) {
+        y_velocity = 0.5;
         x_velocity = 0;
         need_turn_down = false;
     }
 
-    if (need_turn_left && at_center_turn_point) {
-        x_velocity = -1;
+    if ((need_turn_left && at_center_turn_point && x_velocity != 0.5) || (x_velocity == -0.5)) {
+        x_velocity = -0.5;
         y_velocity = 0;
         need_turn_left = false;
     }
 
-    if (need_turn_right && at_center_turn_point) {
-        x_velocity = 1;
+    if ((need_turn_right && at_center_turn_point && x_velocity != -0.5) || (x_velocity == 0.5)) {
+        x_velocity = 0.5;
         y_velocity = 0;
         need_turn_right = false;
     }
@@ -273,14 +316,32 @@ sf::CircleShape move_snake(sf::CircleShape &the_snake_circle) {
 
 
 sf::Vector2f get_current_tile(sf::CircleShape item) {
-    float radius = item.getRadius();
+    // 17 by 15
+    // row: 25 -> 751       ||   0 -> 726
+    // column: 105 -> 743   ||   0 -> 638
+
+    /*
+    position + radies = center of position
+
+
+      x center position  -25   /   751
+    
+    
+    */
+
     
     sf::Vector2f position = item.getPosition();
 
-    int x_pos = position.x + radius - 25 % 44;
-    int y_pos = position.y + radius -105  % 44;
 
-    return sf::Vector2f( x_pos, y_pos );
+    float x_tile = ceil((position.x + 20.0f - 25.0f) / 44.0f);
+    float y_tile = ceil((position.y + 20.0f - 105.0f) / 44.0f);
+    //float x_tile = (position_x - grid_origin_x) / 44;
+    //float y_tile = (position_y - grid_origin_y) / 44;
+
+    
+    //std::cout << x_tile << ", " << y_tile << "\n";
+
+    return sf::Vector2f(x_tile, y_tile);
 }
 
 
@@ -289,5 +350,6 @@ sf::Vector2f get_center_position_of_tile(int x_tile, int y_tile) {
     int x_pos = 25 + 22 + (44 * (x_tile - 1));
     int y_pos = 105 + 22 + (44 * (y_tile - 1));
 
+    // std::cout << x_pos << ", " << y_pos << " good\n";
     return sf::Vector2f(x_pos, y_pos);
 }
