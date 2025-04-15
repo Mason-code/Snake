@@ -31,13 +31,17 @@ bool need_turn_left = false;
 bool need_turn_right = false;
 
 
+//  function declarations
+sf::Sprite rand_apple(sf::Sprite& the_apple_sprite);
+sf::CircleShape move_snake(sf::CircleShape& the_snake_circle);
+sf::Vector2f get_current_tile(sf::CircleShape item);
+sf::Vector2f get_center_position_of_tile(int x_tile, int y_tile);
+
+
+
 int main()
 {
-    //  function declarations
-    sf::Sprite rand_apple(sf::Sprite &the_apple_sprite);
-    sf::CircleShape move_snake(sf::CircleShape& the_snake_circle);
-    sf::Vector2f get_current_tile(sf::CircleShape item);
-    sf::Vector2f get_center_position_of_tile(int x_tile, int y_tile);
+    
 
     // create the window
     sf::RenderWindow window(sf::VideoMode({ 800, 800 }), "Snake");
@@ -194,32 +198,32 @@ sf::CircleShape move_snake(sf::CircleShape &the_snake_circle) {
     
     // ?????? function declarations???????
 
-    sf::Vector2f get_current_tile(sf::CircleShape item);
-    sf::Vector2f get_center_position_of_tile(int x_tile, int y_tile);
+    //sf::Vector2f get_current_tile(sf::CircleShape item);
+    //sf::Vector2f get_center_position_of_tile(int x_tile, int y_tile);
     
 
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left) && x_velocity != -0.5 && x_velocity != 0.5) {
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left) && x_velocity != -1.7 && x_velocity != 1.7) {
         need_turn_left = true;
         need_turn_right = false;
         need_turn_up = false;
         need_turn_down = false;
     }
   
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right) && x_velocity != 0.5 && x_velocity != -0.5) {
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right) && x_velocity != 1.7 && x_velocity != -1.7) {
         need_turn_right = true;
         need_turn_up = false;
         need_turn_down = false;
         need_turn_left = false;
     }
  
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up) && y_velocity != -0.5 && y_velocity != 0.5) {
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up) && y_velocity != -1.7 && y_velocity != 1.7) {
         need_turn_up = true;
         need_turn_down = false;
         need_turn_left = false;
         need_turn_right = false;
     }
 
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down) && y_velocity != 0.5 && y_velocity != -0.5) {
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down) && y_velocity != 1.7 && y_velocity != -1.7) {
         need_turn_down = true;
         need_turn_left = false;
         need_turn_right = false;
@@ -260,7 +264,7 @@ sf::CircleShape move_snake(sf::CircleShape &the_snake_circle) {
     sf::Vector2f center_position = get_center_position_of_tile(current_tile.x, current_tile.y);
     
     // epsilon tolerance
-    float epsilon = 0.1f;
+    float epsilon = 5.0f;
     bool at_center_turn_point =
         std::abs(center_position.x - (current_position.x + 20)) < epsilon &&
         std::abs(center_position.y - (current_position.y + 20)) < epsilon;
@@ -278,26 +282,26 @@ sf::CircleShape move_snake(sf::CircleShape &the_snake_circle) {
     std::cout << y_pos << " -> " << + y_center_pos <<  "\n";
     std::cout << "\n\n\n";*/
 
-    if ((need_turn_up && at_center_turn_point && y_velocity != 0.5) || (y_velocity == -0.5)) {
-        y_velocity = -0.5;
+    if ((need_turn_up && at_center_turn_point && y_velocity != 1.7) || (y_velocity == -1.7)) {
+        y_velocity = -1.7;
         x_velocity = 0;
         need_turn_up = false;
     }
 
-    if ((need_turn_down && at_center_turn_point && y_velocity != -0.5) || (y_velocity == 0.5)) {
-        y_velocity = 0.5;
+    if ((need_turn_down && at_center_turn_point && y_velocity != -1.7) || (y_velocity == 1.7)) {
+        y_velocity = 1.7;
         x_velocity = 0;
         need_turn_down = false;
     }
 
-    if ((need_turn_left && at_center_turn_point && x_velocity != 0.5) || (x_velocity == -0.5)) {
-        x_velocity = -0.5;
+    if ((need_turn_left && at_center_turn_point && x_velocity != 1.7) || (x_velocity == -1.7)) {
+        x_velocity = -1.7;
         y_velocity = 0;
         need_turn_left = false;
     }
 
-    if ((need_turn_right && at_center_turn_point && x_velocity != -0.5) || (x_velocity == 0.5)) {
-        x_velocity = 0.5;
+    if ((need_turn_right && at_center_turn_point && x_velocity != -1.7) || (x_velocity == 1.7)) {
+        x_velocity = 1.7;
         y_velocity = 0;
         need_turn_right = false;
     }
