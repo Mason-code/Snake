@@ -28,8 +28,9 @@ std::vector<sf::Vector2f> need_turn = {};
 /*tail*/
 struct TailVectorData {
     sf::CircleShape shape;
-    std::vector <sf::Vector2f> velocity;
-    std::vector <sf::Vector2f> position;
+    sf::Vector2f current_velocity;
+    sf::Vector2f turn_position;
+    sf::Vector2f next_velocty_at_pos;
 };
 
 std::vector<TailVectorData> snake_tail_vec = {};
@@ -39,11 +40,16 @@ std::vector<TailVectorData> snake_tail_vec = {};
 int apples_eaten = 0;
 
 
+
+
 //  function declarations
 sf::Sprite rand_apple(sf::Sprite& the_apple_sprite);
 std::vector<sf::Vector2f> move_snake(sf::CircleShape& the_snake_circle);
 sf::Vector2f get_current_tile(sf::CircleShape item);
 sf::Vector2f get_center_position_of_tile(int x_tile, int y_tile);
+void add_tail(sf::CircleShape& head);
+void move_first_tail(int iteration_int, sf::CircleShape& iteratee_tail, sf::Vector2f new_velocity, sf::Vector2f new_position_of_turn);
+
 
 
 
@@ -53,15 +59,6 @@ int main()
     // create the window
     sf::RenderWindow window(sf::VideoMode({ 800, 800 }), "Snake");
 
-
-    // first 2 tails
-    sf::CircleShape tail_one;
-    tail_one.setFillColor(sf::Color::Red);
-    tail_one.setPosition(sf::Vector2f(-20 + 25 + 22 + (44 * ((3 - 1) - 1)), -20 + 105 + 22 + (44 * (8 - 1))));
-
-    sf::CircleShape tail_two;
-    tail_two.setFillColor(sf::Color::Red);
-    tail_two.setPosition(sf::Vector2f(-20 + 25 + 22 + (44 * ((3 - 0) - 1)), -20 + 105 + 22 + (44 * (8 - 1))));
 
 
     /*Position Point: testing*/
@@ -132,6 +129,9 @@ int main()
 
     std::vector<sf::Vector2f> tail_values;
 
+    
+    add_tail(snake_head);
+
 
     // run the program as long as the window is open
     while (window.isOpen())
@@ -168,10 +168,16 @@ int main()
         tail_values = move_snake(snake_head);
         window.draw(snake_head);
 
-        //assemble_tail(tail_values[0], tail_values[1]);
-        for (auto& tail : snake_tail_vec) {
+        int iteration_value = 0;
+
+        TailVectorData& first_data = snake_tail_vec[iteration_value];
+        move_first_tail(iteration_value, first_data.shape, tail_values[0], tail_values[1]);
+        window.draw(first_data.shape);
+
+        /*for (auto& tail : snake_tail_vec) {
+            move_first_tail(tail.shape, tail_values[0], tail_values[1]);
             window.draw(tail.shape);
-        }
+        }*/
         
 
 
@@ -281,26 +287,47 @@ std::vector<sf::Vector2f> move_snake(sf::CircleShape &the_snake_circle) {
     }
     sf::Vector2f where_tail_turn = sf::Vector2f(-1.f, -1.f);
     if (at_center_turn_point && !need_turn.empty()) {
-       
-        //std::cout << "CHANGE! -> " << need_turn[0].x << ", " << need_turn[0].y << "\n";
-        
-        // make sure snake can't do 180
-        if ((need_turn[0].x + x_velocity != 0 && need_turn[0].y + y_velocity != 0) || (y_velocity == 0 && x_velocity == 0)) {
 
-            // this fixes the conversion error that you get when using variables inside a function (usually .move function) that uses a sf::Vector2f variable
-            // don't do this: the_snake_circle.move({ x_velocity, y_velocity });
-            x_velocity = need_turn[0].x;
-            y_velocity = need_turn[0].y;
-            where_tail_turn = the_snake_circle.getPosition();
-            std::cout << where_tail_turn.x << ", " << where_tail_turn.y << "\n";
-
+        if (need_turn.size() == 3) {
+            // make sure snake can't do 180
+            /*if ((need_turn[0].x + x_velocity != 0 && need_turn[0].y + y_velocity != 0) || (y_velocity == 0 && x_velocity == 0)) {*/
+            if (!(need_turn[0].x == -x_velocity && need_turn[0].y == -y_velocity) || !(need_turn[1].x == -x_velocity && need_turn[1].y == -y_velocity) || !(need_turn[2].x == -x_velocity && need_turn[2].y == -y_velocity) || (y_velocity == 0 && x_velocity == 0)) {
+                // this fixes the conversion error that you get when using variables inside a function (usually .move function) that uses a sf::Vector2f variable
+                // don't do this: the_snake_circle.move({ x_velocity, y_velocity });
+                x_velocity = need_turn[0].x;
+                y_velocity = need_turn[0].y;
+                where_tail_turn = the_snake_circle.getPosition();
+            }
+        } else if (need_turn.size() == 2) {
+            // make sure snake can't do 180
+            /*if ((need_turn[0].x + x_velocity != 0 && need_turn[0].y + y_velocity != 0) || (y_velocity == 0 && x_velocity == 0)) {*/
+            if (!(need_turn[0].x == -x_velocity && need_turn[0].y == -y_velocity) || !(need_turn[1].x == -x_velocity && need_turn[1].y == -y_velocity) || !(need_turn[2].x == -x_velocity && need_turn[2].y == -y_velocity) || (y_velocity == 0 && x_velocity == 0)) {
+                // this fixes the conversion error that you get when using variables inside a function (usually .move function) that uses a sf::Vector2f variable
+                // don't do this: the_snake_circle.move({ x_velocity, y_velocity });
+                x_velocity = need_turn[0].x;
+                y_velocity = need_turn[0].y;
+                where_tail_turn = the_snake_circle.getPosition();
+            }
         }
+        else {
+            if (!(need_turn[0].x == -x_velocity && need_turn[0].y == -y_velocity) || (y_velocity == 0 && x_velocity == 0)) {
+                // this fixes the conversion error that you get when using variables inside a function (usually .move function) that uses a sf::Vector2f variable
+                // don't do this: the_snake_circle.move({ x_velocity, y_velocity });
+                x_velocity = need_turn[0].x;
+                y_velocity = need_turn[0].y;
+                where_tail_turn = the_snake_circle.getPosition();
+            }
+        }
+    
+
         need_turn.erase(need_turn.begin());
         //std::cout << "erased!!!!!!!!!!!!!!!\n\n";
     }
+    
 
     
      the_snake_circle.move(sf::Vector2f(x_velocity, y_velocity));
+    
      // velocity (you know whether to get this based off the pos), position = sf::Vector2f(-1.f, -1.f)
      std::vector<sf::Vector2f> bruh = { sf::Vector2f(x_velocity, y_velocity), where_tail_turn };
 
@@ -337,95 +364,77 @@ sf::Vector2f get_center_position_of_tile(int x_tile, int y_tile) {
 
 
 
-//snake_tail_vec
+//only for staarting amount
+void add_tail(sf::CircleShape& head) {
 
-//void add_tail() {
-//
-//    sf::CircleShape new_snake_tail(20.f);
-//    new_snake_tail.setFillColor(sf::Color::Red);
-//
-//    head_pos = get
-//    new_snake_tail.setPosition(sf::Vector2f(-20 + 25 + 22 + (44 * ((3 - snake_tail_vec.size()) - 1)), -20 + 105 + 22 + (44 * (8 - 1))));
-//
-//
-//
-//
-//
-//    TailVectorData data;
-//    data.shape = new_snake_tail;
-//
-//    std::vector <sf::Vector2f> new_velocity = data.velocity;
-//    new_velocity.push_back(sf::Vector2f(1.0f, 0.0f));
-//    data.velocity = new_velocity;
-//
-//    std::vector <sf::Vector2f> new_position = data.position;
-//    new_position.push_back(sf::Vector2f(0.0f, 0.1f));
-//    data.position = new_position;
-//
-//    snake_tail_vec.push_back(data);
-//
-//
-//    apples_eaten += 1;
-//}
+    sf::CircleShape new_snake_tail(20.f);
+    new_snake_tail.setFillColor(sf::Color::Red);
+
+    sf::Vector2f head_pos = head.getPosition();
+    new_snake_tail.setPosition(sf::Vector2f(-20 + 25 + 22 + (44 * ((3 - snake_tail_vec.size()) - 1)), -20 + 105 + 22 + (44 * (8 - 1))));
+
+     
 
 
-//void assemble_tail(sf::Vector2f tail_turn_velocity, sf::Vector2f tail_turn_point) {
-//    
-//    
-//    for (size_t i = 0; i < snake_tail_vec.size(); ++i) {
-//        sf::CircleShape &tail = snake_tail_vec[i];
-//        sf::Vector2f tail_pos = tail.getPosition();
-//        
-//
-//        if (tail_turn_point != sf::Vector2f(-1, -1)) {
-//            individual_t_turn_point.push_back(tail_turn_point);
-//        }
-//
-//
-//        // epsilon tolerance
-//        float epsilon = 1.0f;
-//        
-//        /*
-//        This makes is so snake can push stuff
-//        bool at_center_turn_point =
-//            std::abs(tail_pos.x - tail_turn_point.x) < epsilon &&
-//            std::abs(tail_pos.y - tail_turn_point.y) < epsilon;
-//        */
-//        bool at_center_turn_point;
-//        if (individual_t_turn_point.empty()) {
-//            at_center_turn_point = false;
-//        }
-//        else {
-//            at_center_turn_point =
-//                std::abs(tail_pos.x - individual_t_turn_point[i].x) < epsilon ||
-//                std::abs(tail_pos.y - individual_t_turn_point[i].y) < epsilon;
-//        }
-//        
-//        // std::cout << std::abs(tail_pos.x - tail_turn_point.x) << " , " << std::abs(tail_pos.y - tail_turn_point.y) << "\n";
-//        
-//        
-//        if (at_center_turn_point || tail_jumpstart == 1) {
-//            tail.move(sf::Vector2f(tail_turn_velocity.x, tail_turn_velocity.y));
-//            tail_previous_vel[i].x = tail_turn_velocity.x;
-//            tail_previous_vel[i].y = tail_turn_velocity.y;
-//        }
-//        else {
-//            tail.move(sf::Vector2f(tail_previous_vel[i].x, tail_previous_vel[i].y));
-//        }
-//
-//        // check velocities and where they turn
-//        /*if (!tail_previous_vel.empty()) {
-//            std::cout << "potential velocity: " << tail_previous_vel[i].x << ", " << tail_previous_vel[i].y << "\n";
-//
-//        }
-//        if (!individual_t_turn_point.empty()) {
-//            std::cout << "turn point: " << individual_t_turn_point[i].x << ", " << individual_t_turn_point[i].y << "\n";
-//
-//        }*/
-//    
-//    
-//    }
-//
-//   
-//
-//}
+
+    TailVectorData data;
+    data.shape = new_snake_tail;
+
+    data.current_velocity = sf::Vector2f(0.f, 0.f);
+
+    data.turn_position = sf::Vector2f(-1.0f, -1.0f);
+
+    data.next_velocty_at_pos = sf::Vector2f(x_velocity, y_velocity);
+
+    snake_tail_vec.push_back(data);
+
+
+    apples_eaten += 1;
+}
+
+// velocity (you know whether to get this based off the pos), position = sf::Vector2f(-1.f, -1.f)
+void move_first_tail(int iteration_int, sf::CircleShape& iteratee_tail, sf::Vector2f new_velocity , sf::Vector2f new_position_of_turn) {
+    
+    TailVectorData& data = snake_tail_vec[iteration_int];
+
+
+    /* check if turn */
+    sf::Vector2f current_position = iteratee_tail.getPosition();
+
+    // epsilon tolerance
+    float epsilon = 1.0f;
+    bool amlost_same_position =
+        std::abs(data.turn_position.x - (current_position.x)) < epsilon &&
+        std::abs(data.turn_position.y - (current_position.y)) < epsilon;
+
+    if (amlost_same_position) { //current_position == data.turn_position
+        std::cout << "?\n";
+        iteratee_tail.move(sf::Vector2f(data.next_velocty_at_pos.x, data.next_velocty_at_pos.y));
+        data.current_velocity = data.next_velocty_at_pos;
+        data.turn_position = sf::Vector2f(-1.f, -1.f);
+        return;
+    }
+
+    //jumpstart
+    if ((x_velocity != 0 || y_velocity != 0) && data.current_velocity == sf::Vector2f(0.f, 0.f)) {
+        data.current_velocity = sf::Vector2f(0.1f, 0.f);
+        
+    }
+
+    /* update variables */
+    //new_position_of_turn == sf::Vector2f(-1.f, -1.f) or data.turn_position == sf::Vector2f(-1.f, -1.f)
+    if (new_position_of_turn == sf::Vector2f(-1.f, -1.f) ) {
+        //std::cout << data.current_velocity.x <<  ", " << data.current_velocity.y << "\n";
+        iteratee_tail.move(sf::Vector2f(data.current_velocity.x, data.current_velocity.y));
+    } else {
+        data.turn_position = new_position_of_turn;
+        data.next_velocty_at_pos = new_velocity;     
+    }
+
+
+    
+    
+
+}
+
+
