@@ -23,14 +23,14 @@ sf::Texture apple_texture;
 /*snake*/
 float x_velocity = 0;
 float y_velocity = 0;
-std::vector<sf::Vector2f> need_turn = {};
+sf::Vector2f need_turn = {};
 
 /*tail*/
 struct TailVectorData {
     sf::CircleShape shape;
     sf::Vector2f current_velocity;
-    sf::Vector2f turn_position;
-    sf::Vector2f next_velocty_at_pos;
+    std::vector<sf::Vector2f> turn_position;
+    std::vector<sf::Vector2f> next_velocty_at_pos;
 };
 
 std::vector<TailVectorData> snake_tail_vec = {};
@@ -40,7 +40,7 @@ std::vector<TailVectorData> snake_tail_vec = {};
 int apples_eaten = 0;
 
 
-
+sf::Vector2f last_direction_change_location = sf::Vector2f(-1.f, -1.f);
 
 //  function declarations
 sf::Sprite rand_apple(sf::Sprite& the_apple_sprite);
@@ -139,6 +139,7 @@ int main()
         // check all the window's events that were triggered since the last iteration of the loop
         while (const std::optional event = window.pollEvent())
         {
+            float ing_donuts = 0.1f;
 
             /* 
             
@@ -152,17 +153,17 @@ int main()
             
             */
             if (const auto* key = event->getIf<sf::Event::KeyPressed>()) { //Check if the current event is a KeyPressed event. | If it is, get a pointer to the KeyPressed data and store it in 'key'.
-                if (key->code == sf::Keyboard::Key::W) {
-                    std::cout << "up\n";
+                if (key->code == sf::Keyboard::Key::W && y_velocity != ing_donuts) {
+                    need_turn = sf::Vector2f(0.f,-ing_donuts);
                 }
-                if (key->code == sf::Keyboard::Key::A) {
-                    std::cout << "left\n";
+                if (key->code == sf::Keyboard::Key::A && x_velocity != ing_donuts) {
+                    need_turn = sf::Vector2f(-ing_donuts, 0.f);
                 }
-                if (key->code == sf::Keyboard::Key::S) {
-                    std::cout << "down\n";
+                if (key->code == sf::Keyboard::Key::S && y_velocity != -ing_donuts) {
+                    need_turn = sf::Vector2f(0.f, ing_donuts);
                 }
-                if (key->code == sf::Keyboard::Key::D) {
-                    std::cout << "right\n";
+                if (key->code == sf::Keyboard::Key::D && x_velocity != -ing_donuts) {
+                    need_turn = sf::Vector2f(ing_donuts, 0.f);
                 }
             }
 
@@ -255,43 +256,10 @@ sf::Sprite rand_apple(sf::Sprite& the_apple_sprite) {
 
 
 std::vector<sf::Vector2f> move_snake(sf::CircleShape &the_snake_circle) {
-    //sped
-    float ing_donuts = 0.1f;
-
-    /*dirction: TSA*/
-    if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left) && need_turn.size() < 2)) {
-        // need_turn.empty() is needed so it doesn't break
-        need_turn.push_back(sf::Vector2f(-ing_donuts, 0));
-        
+    /*direction: TSA-Screening*/
+    if (need_turn == sf::Vector2f(x_velocity, y_velocity)) {
+        need_turn = sf::Vector2f(-69.f, -69.f);
     }
-  
-    if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right) && need_turn.size() < 2)) {
-        need_turn.push_back(sf::Vector2f(ing_donuts, 0));
-        
-    }
- 
-    if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up) && need_turn.size() < 2)) {
-        need_turn.push_back(sf::Vector2f(0, -ing_donuts));
-        
-    }
-    if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down) && need_turn.size() < 2)) {
-        need_turn.push_back(sf::Vector2f(0, ing_donuts));
-        
-    }
-    
-
-    /*direction: Screening*/
-
-    // make sure there are no velocity double ups in the list :
-    std::vector<sf::Vector2f> updated_velocity_list = {};
-
-    for (const auto& check_velocity : need_turn) {
-        if (updated_velocity_list.empty() || updated_velocity_list.back() != check_velocity) {
-            updated_velocity_list.push_back(check_velocity);
-        }
-        
-    }
-    need_turn = updated_velocity_list;
 
     /*direction: Boarding*/
    
@@ -314,20 +282,14 @@ std::vector<sf::Vector2f> move_snake(sf::CircleShape &the_snake_circle) {
     
 
     /*direction: Lift - off*/ 
-    if (!need_turn.empty() && need_turn[0] == current_velocity ) { 
-        need_turn.erase(need_turn.begin());
-    }
     sf::Vector2f where_tail_turn = sf::Vector2f(-1.f, -1.f);
-    if (at_center_turn_point && !need_turn.empty()) {
-        // make sure snake can't do 180
-        if ((need_turn[0].x + x_velocity != 0 && need_turn[0].y + y_velocity != 0) || (y_velocity == 0 && x_velocity == 0)) {
-            // this fixes the conversion error that you get when using variables inside a function (usually .move function) that uses a sf::Vector2f variable
-            // don't do this: the_snake_circle.move({ x_velocity, y_velocity });
-            x_velocity = need_turn[0].x;
-            y_velocity = need_turn[0].y;
+    if (at_center_turn_point && !(need_turn == sf::Vector2f(-69.f, -69.f))) {
+        if (!(x_velocity == -need_turn.x) && !(y_velocity == -need_turn.y) || (x_velocity == 0.f && y_velocity == 0.f)) {
+            x_velocity = need_turn.x;
+            y_velocity = need_turn.y;
             where_tail_turn = the_snake_circle.getPosition();
         }
-        need_turn.erase(need_turn.begin());
+        need_turn = sf::Vector2f(-69.f, -69.f);
     }
     
     
@@ -387,9 +349,9 @@ void add_tail(sf::CircleShape& head) {
 
     data.current_velocity = sf::Vector2f(0.f, 0.f);
 
-    data.turn_position = sf::Vector2f(-1.0f, -1.0f);
+    data.turn_position = {};
 
-    data.next_velocty_at_pos = sf::Vector2f(x_velocity, y_velocity);
+    data.next_velocty_at_pos.push_back(sf::Vector2f(x_velocity, y_velocity));
 
     snake_tail_vec.push_back(data);
 
@@ -401,22 +363,48 @@ void add_tail(sf::CircleShape& head) {
 void move_first_tail(int iteration_int, sf::CircleShape& iteratee_tail, sf::Vector2f new_velocity , sf::Vector2f new_position_of_turn) {
     
     TailVectorData& data = snake_tail_vec[iteration_int];
+    
+    
+    // nothing new; just keep swimming
+    if (new_position_of_turn == sf::Vector2f(-1.f, -1.f)) {
+        //std::cout << data.current_velocity.x <<  ", " << data.current_velocity.y << "\n";
+        iteratee_tail.move(sf::Vector2f(data.current_velocity.x, data.current_velocity.y));
+        return;
+    }
+
+    data.turn_position.push_back(new_position_of_turn);
+    data.next_velocty_at_pos.push_back(new_velocity);
+    std::cout << "check1\n";
 
 
-    /* check if turn */
-    sf::Vector2f current_position = iteratee_tail.getPosition();
 
+    /* check if able to turn */
     // epsilon tolerance
     float epsilon = 1.0f;
+    sf::Vector2f current_position = iteratee_tail.getPosition();
     bool amlost_same_position =
-        std::abs(data.turn_position.x - (current_position.x)) < epsilon &&
-        std::abs(data.turn_position.y - (current_position.y)) < epsilon;
+        std::abs(data.turn_position[0].x - (current_position.x)) < epsilon &&
+        std::abs(data.turn_position[0].y - (current_position.y)) < epsilon;
 
     if (amlost_same_position) { //current_position == data.turn_position
-        std::cout << "?\n";
-        iteratee_tail.move(sf::Vector2f(data.next_velocty_at_pos.x, data.next_velocty_at_pos.y));
-        data.current_velocity = data.next_velocty_at_pos;
-        data.turn_position = sf::Vector2f(-1.f, -1.f);
+        std::cout << "turned\n";
+        
+        //iteratee_tail.move(sf::Vector2f(data.next_velocty_at_pos.x, data.next_velocty_at_pos.y));
+
+        //if (y_velocity != 0) {
+        //    iteratee_tail.setPosition(sf::Vector2f(data.turn_position.x, data.turn_position.y - y_velocity * 50)); // set position to tile before
+        //}
+        //else {
+        //    iteratee_tail.setPosition(sf::Vector2f(data.turn_position.x - x_velocity * 50, data.turn_position.y)); // set position to tile before
+        //}
+        
+        data.turn_position.erase(data.turn_position.begin());
+        data.current_velocity = data.next_velocty_at_pos[0];
+        data.next_velocty_at_pos.erase(data.next_velocty_at_pos.begin());
+
+
+        iteratee_tail.move(sf::Vector2f(data.current_velocity.x, data.current_velocity.y));
+
         return;
     }
 
@@ -426,17 +414,7 @@ void move_first_tail(int iteration_int, sf::CircleShape& iteratee_tail, sf::Vect
         
     }
 
-    /* update variables */
-    //new_position_of_turn == sf::Vector2f(-1.f, -1.f) or data.turn_position == sf::Vector2f(-1.f, -1.f)
-    if (new_position_of_turn == sf::Vector2f(-1.f, -1.f) ) {
-        //std::cout << data.current_velocity.x <<  ", " << data.current_velocity.y << "\n";
-        iteratee_tail.move(sf::Vector2f(data.current_velocity.x, data.current_velocity.y));
-    } else {
-        data.turn_position = new_position_of_turn;
-        data.next_velocty_at_pos = new_velocity;     
-    }
-
-
+   
     
     
 
