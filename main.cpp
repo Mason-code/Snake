@@ -61,11 +61,6 @@ int main()
 
 
 
-    /*Position Point: testing*/
-    sf::CircleShape point(5.f);
-    // point.setPosition({ -point_radius + x_grid_start + half_of_tile_width + (tile_width * (which_tile - offset)), -point_radius + y_grid_start + half_of_tile_width + (tile_width * (which_tile - offset))});
-    point.setPosition({ -5 + 25 + 22 +(44 * (5-1)), -5 + 105 + 22 +(44 * (5-1))});
-
 
     /*Map--Start*/
     //map border
@@ -351,7 +346,7 @@ void add_tail(sf::CircleShape& head) {
 
     data.turn_position = {};
 
-    data.next_velocty_at_pos.push_back(sf::Vector2f(x_velocity, y_velocity));
+    data.next_velocty_at_pos = {};
 
     snake_tail_vec.push_back(data);
 
@@ -360,21 +355,18 @@ void add_tail(sf::CircleShape& head) {
 }
 
 // velocity (you know whether to get this based off the pos), position = sf::Vector2f(-1.f, -1.f)
-void move_first_tail(int iteration_int, sf::CircleShape& iteratee_tail, sf::Vector2f new_velocity , sf::Vector2f new_position_of_turn) {
-    
-    TailVectorData& data = snake_tail_vec[iteration_int];
-    
-    
-    // nothing new; just keep swimming
-    if (new_position_of_turn == sf::Vector2f(-1.f, -1.f)) {
-        //std::cout << data.current_velocity.x <<  ", " << data.current_velocity.y << "\n";
-        iteratee_tail.move(sf::Vector2f(data.current_velocity.x, data.current_velocity.y));
-        return;
-    }
+void move_first_tail(int iteration_int, sf::CircleShape& iteratee_tail, sf::Vector2f new_velocity, sf::Vector2f new_position_of_turn) {
 
-    data.turn_position.push_back(new_position_of_turn);
-    data.next_velocty_at_pos.push_back(new_velocity);
-    std::cout << "check1\n";
+
+    TailVectorData& data = snake_tail_vec[iteration_int];
+
+    if (new_position_of_turn != sf::Vector2f(-1.f, -1.f)) {
+        std::cout << "record new pos " << new_position_of_turn.x << ", " << new_position_of_turn.y << " | Amount of pos: " << data.turn_position.size()+1 << " \n";
+        data.turn_position.push_back(new_position_of_turn);
+        data.next_velocty_at_pos.push_back(new_velocity);
+        std::cout << "check2\n";
+
+    }
 
 
 
@@ -382,13 +374,19 @@ void move_first_tail(int iteration_int, sf::CircleShape& iteratee_tail, sf::Vect
     // epsilon tolerance
     float epsilon = 1.0f;
     sf::Vector2f current_position = iteratee_tail.getPosition();
+
+    // checks if tail is on the one of the same axis as the head
     bool amlost_same_position =
-        std::abs(data.turn_position[0].x - (current_position.x)) < epsilon &&
-        std::abs(data.turn_position[0].y - (current_position.y)) < epsilon;
+        (!(data.turn_position.empty()) && std::abs(data.turn_position[0].x - (current_position.x)) < epsilon && (std::abs(data.turn_position[0].x - (current_position.x)) * y_velocity != 0)) ||
+        (!(data.turn_position.empty()) && std::abs(data.turn_position[0].y - (current_position.y)) < epsilon && (std::abs(data.turn_position[0].y - (current_position.y)) * x_velocity != 0));
 
     if (amlost_same_position) { //current_position == data.turn_position
-        std::cout << "turned\n";
-        
+        std::cout << "turned at " << data.turn_position[0].x << " , " << data.turn_position[0].y << " \n";
+        if (data.turn_position.size() >1) {
+            std::cout << "looking for " << data.turn_position[1].x << " , " << data.turn_position[1].y << " \n";
+
+        }
+
         //iteratee_tail.move(sf::Vector2f(data.next_velocty_at_pos.x, data.next_velocty_at_pos.y));
 
         //if (y_velocity != 0) {
@@ -397,8 +395,13 @@ void move_first_tail(int iteration_int, sf::CircleShape& iteratee_tail, sf::Vect
         //else {
         //    iteratee_tail.setPosition(sf::Vector2f(data.turn_position.x - x_velocity * 50, data.turn_position.y)); // set position to tile before
         //}
-        
+
+        // position it -> tile width - radius of ball = 44 - 20 = 22
+        int fuck_off_coefficient = 0;
+        iteratee_tail.setPosition(sf::Vector2f(data.turn_position[0].x - fuck_off_coefficient * (x_velocity * 10), data.turn_position[0].y - fuck_off_coefficient * (y_velocity * 10)));
         data.turn_position.erase(data.turn_position.begin());
+
+        //std::cout << data.current_velocity.x << ", " << data.current_velocity.y << " vs " << data.next_velocty_at_pos[0].x << ", " << data.next_velocty_at_pos[0].y << " \n" << data.next_velocty_at_pos.size();
         data.current_velocity = data.next_velocty_at_pos[0];
         data.next_velocty_at_pos.erase(data.next_velocty_at_pos.begin());
 
@@ -408,15 +411,28 @@ void move_first_tail(int iteration_int, sf::CircleShape& iteratee_tail, sf::Vect
         return;
     }
 
+
+
+
+
     //jumpstart
     if ((x_velocity != 0 || y_velocity != 0) && data.current_velocity == sf::Vector2f(0.f, 0.f)) {
         data.current_velocity = sf::Vector2f(0.1f, 0.f);
-        
+        std::cout << "check3\n";
+        /*data.next_velocty_at_pos = {};
+        data.turn_position = {};*/
+
     }
 
-   
-    
-    
+
+
+    // nothing new; just keep swimming
+    if (new_position_of_turn == sf::Vector2f(-1.f, -1.f)) {
+        //std::cout << "nooo\n";
+        //std::cout << data.current_velocity.x <<  ", " << data.current_velocity.y << "\n";
+        iteratee_tail.move(sf::Vector2f(data.current_velocity.x, data.current_velocity.y));
+        //std::cout << "check1\n";
+    }
 
 }
 
