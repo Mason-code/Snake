@@ -139,6 +139,38 @@ int main()
         // check all the window's events that were triggered since the last iteration of the loop
         while (const std::optional event = window.pollEvent())
         {
+
+            /* 
+            
+            If you have a regular object, you use the dot '.' operator:
+            sf::Event event;
+            event.type; // access the 'type' member of the event object
+            
+            If you have a pointer to an object, you use the arrow '->' operator:
+            sf::Event* eventPtr = &event;
+            eventPtr->type; // access the 'type' member through the pointer
+            
+            */
+            if (const auto* key = event->getIf<sf::Event::KeyPressed>()) { //Check if the current event is a KeyPressed event. | If it is, get a pointer to the KeyPressed data and store it in 'key'.
+                if (key->code == sf::Keyboard::Key::W) {
+                    std::cout << "up\n";
+                }
+                if (key->code == sf::Keyboard::Key::A) {
+                    std::cout << "left\n";
+                }
+                if (key->code == sf::Keyboard::Key::S) {
+                    std::cout << "down\n";
+                }
+                if (key->code == sf::Keyboard::Key::D) {
+                    std::cout << "right\n";
+                }
+            }
+
+
+
+
+
+
             // "close requested" event: we close the window
             if (event->is<sf::Event::Closed>())
                 window.close();
@@ -224,29 +256,29 @@ sf::Sprite rand_apple(sf::Sprite& the_apple_sprite) {
 
 std::vector<sf::Vector2f> move_snake(sf::CircleShape &the_snake_circle) {
     //sped
-    float ing_donuts = .1f;
+    float ing_donuts = 0.1f;
 
     /*dirction: TSA*/
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left) && need_turn.size() < 2) {
+    if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left) && need_turn.size() < 2)) {
         // need_turn.empty() is needed so it doesn't break
         need_turn.push_back(sf::Vector2f(-ing_donuts, 0));
         
     }
   
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right) && need_turn.size() < 2) {
+    if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right) && need_turn.size() < 2)) {
         need_turn.push_back(sf::Vector2f(ing_donuts, 0));
         
     }
  
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up) && need_turn.size() < 2) {
+    if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up) && need_turn.size() < 2)) {
         need_turn.push_back(sf::Vector2f(0, -ing_donuts));
         
     }
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down) && need_turn.size() < 2) {
+    if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down) && need_turn.size() < 2)) {
         need_turn.push_back(sf::Vector2f(0, ing_donuts));
         
     }
-
+    
 
     /*direction: Screening*/
 
@@ -282,49 +314,22 @@ std::vector<sf::Vector2f> move_snake(sf::CircleShape &the_snake_circle) {
     
 
     /*direction: Lift - off*/ 
-    if (!need_turn.empty() && need_turn[0] == current_velocity) {
+    if (!need_turn.empty() && need_turn[0] == current_velocity ) { 
         need_turn.erase(need_turn.begin());
     }
     sf::Vector2f where_tail_turn = sf::Vector2f(-1.f, -1.f);
     if (at_center_turn_point && !need_turn.empty()) {
-
-        if (need_turn.size() == 3) {
-            // make sure snake can't do 180
-            /*if ((need_turn[0].x + x_velocity != 0 && need_turn[0].y + y_velocity != 0) || (y_velocity == 0 && x_velocity == 0)) {*/
-            if (!(need_turn[0].x == -x_velocity && need_turn[0].y == -y_velocity) || !(need_turn[1].x == -x_velocity && need_turn[1].y == -y_velocity) || !(need_turn[2].x == -x_velocity && need_turn[2].y == -y_velocity) || (y_velocity == 0 && x_velocity == 0)) {
-                // this fixes the conversion error that you get when using variables inside a function (usually .move function) that uses a sf::Vector2f variable
-                // don't do this: the_snake_circle.move({ x_velocity, y_velocity });
-                x_velocity = need_turn[0].x;
-                y_velocity = need_turn[0].y;
-                where_tail_turn = the_snake_circle.getPosition();
-            }
-        } else if (need_turn.size() == 2) {
-            // make sure snake can't do 180
-            /*if ((need_turn[0].x + x_velocity != 0 && need_turn[0].y + y_velocity != 0) || (y_velocity == 0 && x_velocity == 0)) {*/
-            if (!(need_turn[0].x == -x_velocity && need_turn[0].y == -y_velocity) || !(need_turn[1].x == -x_velocity && need_turn[1].y == -y_velocity) || !(need_turn[2].x == -x_velocity && need_turn[2].y == -y_velocity) || (y_velocity == 0 && x_velocity == 0)) {
-                // this fixes the conversion error that you get when using variables inside a function (usually .move function) that uses a sf::Vector2f variable
-                // don't do this: the_snake_circle.move({ x_velocity, y_velocity });
-                x_velocity = need_turn[0].x;
-                y_velocity = need_turn[0].y;
-                where_tail_turn = the_snake_circle.getPosition();
-            }
+        // make sure snake can't do 180
+        if ((need_turn[0].x + x_velocity != 0 && need_turn[0].y + y_velocity != 0) || (y_velocity == 0 && x_velocity == 0)) {
+            // this fixes the conversion error that you get when using variables inside a function (usually .move function) that uses a sf::Vector2f variable
+            // don't do this: the_snake_circle.move({ x_velocity, y_velocity });
+            x_velocity = need_turn[0].x;
+            y_velocity = need_turn[0].y;
+            where_tail_turn = the_snake_circle.getPosition();
         }
-        else {
-            if (!(need_turn[0].x == -x_velocity && need_turn[0].y == -y_velocity) || (y_velocity == 0 && x_velocity == 0)) {
-                // this fixes the conversion error that you get when using variables inside a function (usually .move function) that uses a sf::Vector2f variable
-                // don't do this: the_snake_circle.move({ x_velocity, y_velocity });
-                x_velocity = need_turn[0].x;
-                y_velocity = need_turn[0].y;
-                where_tail_turn = the_snake_circle.getPosition();
-            }
-        }
-    
-
         need_turn.erase(need_turn.begin());
-        //std::cout << "erased!!!!!!!!!!!!!!!\n\n";
     }
     
-
     
      the_snake_circle.move(sf::Vector2f(x_velocity, y_velocity));
     
