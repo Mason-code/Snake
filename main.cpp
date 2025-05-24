@@ -17,7 +17,6 @@ multi que movement strat.
 
 
 //global
-// 
 //Time
 sf::Clock clock_time;
 
@@ -41,7 +40,7 @@ std::vector<TailVectorData> snake_tail_vec = {};
 
 
 
-int apples_eaten = 0;
+int apples_eaten = 3;
 
 
 sf::Vector2f last_direction_change_location = sf::Vector2f(-1.f, -1.f);
@@ -49,11 +48,11 @@ sf::Vector2f last_direction_change_location = sf::Vector2f(-1.f, -1.f);
 //  function declarations
 sf::Sprite rand_apple(sf::Sprite& the_apple_sprite);
 std::vector<sf::Vector2f> move_snake(sf::CircleShape& the_snake_circle);
-sf::Vector2f get_current_tile(sf::CircleShape item);
+sf::Vector2f get_current_tile(sf::Transformable& item);
 sf::Vector2f get_center_position_of_tile(int x_tile, int y_tile);
 void add_tail(sf::CircleShape& head);
 void move_first_tail(int iteration_int, sf::CircleShape& iteratee_tail, sf::Vector2f new_velocity, sf::Vector2f new_position_of_turn, sf::CircleShape& snake_head);
-
+sf::CircleShape add_additional_tail(sf::CircleShape& final_tail);
 
 
 int main()
@@ -129,7 +128,7 @@ int main()
 
     
     add_tail(snake_head);
-    bool bird = true;
+    
 
 
 
@@ -204,42 +203,41 @@ int main()
 
 
 
-        /*window.draw(apple_sprite);
-        once snake == apple{
-            window.draw(rand_apple(apple_sprite));
-        } */
         
 
         tail_values = move_snake(snake_head);
         window.draw(snake_head);
 
-        int iteration_value = 0;
-
-        TailVectorData& first_data = snake_tail_vec[iteration_value];
-        move_first_tail(iteration_value, first_data.shape, tail_values[0], tail_values[1], snake_head);
-        window.draw(first_data.shape);
 
 
+        /*int iteration_value = 0;
+
+        for (auto& tail : snake_tail_vec) {
+            TailVectorData& data = snake_tail_vec[iteration_value];
+            if (iteration_value == 0) {
+                move_first_tail(iteration_value, data.shape, tail_values[0], tail_values[1], snake_head);
+                window.draw(data.shape);
+                iteration_value++;
+                continue;
+            }
 
 
-        if (bird) {
-            add_additional_tail(snake_head);
-            bird = false;
-        }
-
-
-
-        int iteration_value = 1;
-
-        TailVectorData& sec_data = snake_tail_vec[iteration_value];
-        move_first_tail(iteration_value, sec_data.shape, tail_values[0], tail_values[1], snake_head);
-        window.draw(sec_data.shape);
-
-        /*for (auto& tail : snake_tail_vec) {
-            move_first_tail(tail.shape, tail_values[0], tail_values[1]);
+            move_additional_tail(tail.shape, tail_values[0], tail_values[1],snake_head);
             window.draw(tail.shape);
+            iteration_value++;
         }*/
         
+      
+        
+        // Collision detection
+        sf::Vector2f apple_location = get_current_tile(apple_sprite);
+        sf::Vector2f snake_location = get_current_tile(snake_head);
+
+        if (apple_location == snake_location) {
+            rand_apple(apple_sprite); // add stuff to make sure this doesn't land on tail!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        }
+
+        window.draw(apple_sprite);
 
 
         // end the current frame
@@ -335,7 +333,7 @@ std::vector<sf::Vector2f> move_snake(sf::CircleShape &the_snake_circle) {
 
 
 
-sf::Vector2f get_current_tile(sf::CircleShape item) {
+sf::Vector2f get_current_tile(sf::Transformable& item) { // I can pass any object derived from sf::Transformable (like sf::Sprite, sf::CircleShape, sf::RectangleShape, etc.)
 
     sf::Vector2f position = item.getPosition();
 
@@ -453,32 +451,18 @@ void move_first_tail(int iteration_int, sf::CircleShape& iteratee_tail, sf::Vect
 }
 
 
-void add_additional_tail(sf::CircleShape& final_tail) {
-    sf::CircleShape new_snake_tail(20.f);
-    new_snake_tail.setFillColor(sf::Color::Red);
-
-    sf::Vector2f head_pos = final_tail.getPosition();
-    new_snake_tail.setPosition(sf::Vector2f(-20 + 25 + 22 + (44 * ((3 - snake_tail_vec.size()) - 1)), -20 + 105 + 22 + (44 * (8 - 1))));
-
-
-
-
-
+sf::CircleShape add_additional_tail(sf::CircleShape& final_tail) {
     TailVectorData data;
-    data.shape = new_snake_tail;
 
-    data.current_velocity = sf::Vector2f(0.f, 0.f);
+    sf::CircleShape new_snake_tail(20.f);
+    new_snake_tail.setFillColor(sf::Color::Black);
 
-    data.turn_position = {};
-
-    data.next_velocty_at_pos = {};
-
-    snake_tail_vec.push_back(data);
-
-
+    sf::Vector2f spawn_point = final_tail.getPosition();
+    new_snake_tail.setPosition(sf::Vector2f(spawn_point.x-44 * data.current_velocity.x, spawn_point.y-44 * data.current_velocity.y)); // delete
     apples_eaten += 1;
+    return new_snake_tail;
 }
 
 void move_additional_tail() {
-
+    std::cout << 2;
 }
