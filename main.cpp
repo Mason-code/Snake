@@ -455,14 +455,22 @@ void move_first_tail(int iteration_int, sf::CircleShape& iteratee_tail, sf::Vect
     // checks if tail is past turn point
     // epsilon tolerance
     float epsilon = 2.0f; // determines how close tail gets to head before direction changes
+    for (int i = data.turn_position.size() - 1; i > 0; i--) {
+        bool past_turn_point = // this all depends on direction so it gets messy, thats why i just did absolute v
+            (!data.turn_position.empty() && std::abs(data.turn_position[i].x - tail_current_position.x) <= epsilon) &&
+            (!data.turn_position.empty() && std::abs(data.turn_position[i].y - tail_current_position.y) <= epsilon);
+        if (past_turn_point) {
+            data.turn_position.erase(data.turn_position.begin() + i);
+            data.next_velocty_at_pos.erase(data.next_velocty_at_pos.begin() + i);
+
+        }
+
+    }
     bool past_turn_point = // this all depends on direction so it gets messy, thats why i just did absolute v
         (!data.turn_position.empty() && std::abs(data.turn_position[0].x - tail_current_position.x) <= epsilon) &&
         (!data.turn_position.empty() && std::abs(data.turn_position[0].y - tail_current_position.y) <= epsilon);
 
-    /*if (!data.turn_position.empty()) {
-        std::cout << "Looking for: " << data.turn_position[0].x << ", " << data.turn_position[0].y << " at " << data.turn_position[0].x - tail_current_position.x << ", " << data.turn_position[0].y - tail_current_position.y << " away\n";
 
-    }*/
     
     if (past_turn_point) { 
 
@@ -524,17 +532,30 @@ void move_additional_tail(int iteration_int, sf::CircleShape& tail_to_follow, sf
         data.turn_position = {};
 
     }    
+    // Dory
+    current_tail.move(sf::Vector2f(data.current_velocity.x, data.current_velocity.y));
+
 
     /* check if able to turn */
     sf::Vector2f tail_current_position = current_tail.getPosition();
     // checks if tail is past turn point
     // epsilon tolerance
     float epsilon = 2.0f; // determines how close tail gets to head before direction changes
+    for (int i = data.turn_position.size()-1; i > 0; i--) {
+        bool past_turn_point = // this all depends on direction so it gets messy, thats why i just did absolute v
+            (!data.turn_position.empty() && std::abs(data.turn_position[i].x - tail_current_position.x) <= epsilon) &&
+            (!data.turn_position.empty() && std::abs(data.turn_position[i].y - tail_current_position.y) <= epsilon);
+        if (past_turn_point) {
+            data.turn_position.erase(data.turn_position.begin() + i);
+            data.next_velocty_at_pos.erase(data.next_velocty_at_pos.begin() + i);
+
+        }
+
+    }
     bool past_turn_point = // this all depends on direction so it gets messy, thats why i just did absolute v
         (!data.turn_position.empty() && std::abs(data.turn_position[0].x - tail_current_position.x) <= epsilon) &&
         (!data.turn_position.empty() && std::abs(data.turn_position[0].y - tail_current_position.y) <= epsilon);
 
-    current_tail.move(sf::Vector2f(data.current_velocity.x, data.current_velocity.y));
 
 
     if (past_turn_point) {
