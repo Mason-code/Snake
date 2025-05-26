@@ -50,7 +50,7 @@ struct TailVectorData {
 std::vector<TailVectorData> snake_tail_vec = {};
 
 
-float uni_speed = 0.8f;
+float uni_speed = 0.3f; //0.8
 int apples_eaten = 0;
 
 
@@ -440,14 +440,17 @@ void move_first_tail(int iteration_int, sf::CircleShape& iteratee_tail, sf::Vect
         
         for (int i = 0; i < snake_tail_vec.size(); i++) {
             TailVectorData& shared_data = snake_tail_vec[i];
-            shared_data.turn_position.push_back(new_position_of_turn);
-            shared_data.next_velocty_at_pos.push_back(new_velocity);
+            if (std::find(shared_data.turn_position.begin(), shared_data.turn_position.end(), new_position_of_turn) == shared_data.turn_position.end()) { // if (!shared_data.turn_position.contains(new_position_of_turn)) {
+                shared_data.turn_position.push_back(new_position_of_turn);
+                shared_data.next_velocty_at_pos.push_back(new_velocity);
+            }
+            
         }
       
 
     } else {
         // nothing new; just keep swimming
-        iteratee_tail.move(sf::Vector2f(data.current_velocity.x, data.current_velocity.y));
+        iteratee_tail.move(sf::Vector2f(data.current_velocity.x, data.current_velocity.y)); 
     }
 
     /* check if able to turn */
@@ -455,21 +458,11 @@ void move_first_tail(int iteration_int, sf::CircleShape& iteratee_tail, sf::Vect
     // checks if tail is past turn point
     // epsilon tolerance
     float epsilon = 2.0f; // determines how close tail gets to head before direction changes
-    for (int i = data.turn_position.size() - 1; i > 0; i--) {
-        bool past_turn_point = // this all depends on direction so it gets messy, thats why i just did absolute v
-            (!data.turn_position.empty() && std::abs(data.turn_position[i].x - tail_current_position.x) <= epsilon) &&
-            (!data.turn_position.empty() && std::abs(data.turn_position[i].y - tail_current_position.y) <= epsilon);
-        if (past_turn_point) {
-            data.turn_position.erase(data.turn_position.begin() + i);
-            data.next_velocty_at_pos.erase(data.next_velocty_at_pos.begin() + i);
-
-        }
-
-    }
     bool past_turn_point = // this all depends on direction so it gets messy, thats why i just did absolute v
         (!data.turn_position.empty() && std::abs(data.turn_position[0].x - tail_current_position.x) <= epsilon) &&
         (!data.turn_position.empty() && std::abs(data.turn_position[0].y - tail_current_position.y) <= epsilon);
 
+    
 
     
     if (past_turn_point) { 
@@ -479,10 +472,10 @@ void move_first_tail(int iteration_int, sf::CircleShape& iteratee_tail, sf::Vect
 
 
         //set position 44 away from head
-        //iteratee_tail.setPosition(sf::Vector2f(data.turn_position[0].x -8*x_velocity, data.turn_position[0].y -8*y_velocity));
         iteratee_tail.setPosition(sf::Vector2f((speed_value * data.next_velocty_at_pos[0].x) * -44 + head_current_position.x, (data.next_velocty_at_pos[0].y * speed_value) * -44 + head_current_position.y));
-        //std::cout << (10 * data.next_velocty_at_pos[0].x) * -44 + head_current_position.x << ", " << (data.next_velocty_at_pos[0].y * 10) * -44 + head_current_position.y << " to head:"
-        //   // << head_current_position.x << ", " << head_current_position.y << "\n";
+        
+        //iteratee_tail.setPosition(sf::Vector2f(-(data.next_velocty_at_pos[0].x) + data.turn_position[0].x , -(data.next_velocty_at_pos[0].y) + data.turn_position[0].y)); // set position of both current and previous(head)!!!!!!!!!!!!!!!!!!!!!!!!!!
+        
 
         data.current_velocity = data.next_velocty_at_pos[0];
 
@@ -541,17 +534,17 @@ void move_additional_tail(int iteration_int, sf::CircleShape& tail_to_follow, sf
     // checks if tail is past turn point
     // epsilon tolerance
     float epsilon = 2.0f; // determines how close tail gets to head before direction changes
-    for (int i = data.turn_position.size()-1; i > 0; i--) {
-        bool past_turn_point = // this all depends on direction so it gets messy, thats why i just did absolute v
-            (!data.turn_position.empty() && std::abs(data.turn_position[i].x - tail_current_position.x) <= epsilon) &&
-            (!data.turn_position.empty() && std::abs(data.turn_position[i].y - tail_current_position.y) <= epsilon);
-        if (past_turn_point) {
-            data.turn_position.erase(data.turn_position.begin() + i);
-            data.next_velocty_at_pos.erase(data.next_velocty_at_pos.begin() + i);
+    //for (int i = data.turn_position.size()-1; i > 0; i--) {
+    //    bool past_turn_point = // this all depends on direction so it gets messy, thats why i just did absolute v
+    //        (!data.turn_position.empty() && std::abs(data.turn_position[i].x - tail_current_position.x) <= epsilon) &&
+    //        (!data.turn_position.empty() && std::abs(data.turn_position[i].y - tail_current_position.y) <= epsilon);
+    //    if (past_turn_point) {
+    //        data.turn_position.erase(data.turn_position.begin() + i);
+    //        data.next_velocty_at_pos.erase(data.next_velocty_at_pos.begin() + i);
 
-        }
+    //    }
 
-    }
+    //}
     bool past_turn_point = // this all depends on direction so it gets messy, thats why i just did absolute v
         (!data.turn_position.empty() && std::abs(data.turn_position[0].x - tail_current_position.x) <= epsilon) &&
         (!data.turn_position.empty() && std::abs(data.turn_position[0].y - tail_current_position.y) <= epsilon);
@@ -562,9 +555,8 @@ void move_additional_tail(int iteration_int, sf::CircleShape& tail_to_follow, sf
 
         sf::Vector2f followed_current_position = tail_to_follow.getPosition();
 
-        current_tail.setPosition(sf::Vector2f((speed_value * data.next_velocty_at_pos[0].x) * -44 + followed_current_position.x, (data.next_velocty_at_pos[0].y * speed_value) * -44 + followed_current_position.y));
         
-        
+        current_tail.setPosition(sf::Vector2f(-(data.next_velocty_at_pos[0].x) + data.turn_position[0].x, -(data.next_velocty_at_pos[0].y) + data.turn_position[0].y));
         
         data.current_velocity = data.next_velocty_at_pos[0];
 
