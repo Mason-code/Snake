@@ -553,14 +553,66 @@ void move_additional_tail(int iteration_int, sf::CircleShape& tail_to_follow, sf
     //jumpstart
     if ((x_velocity != 0 || y_velocity != 0) && data.current_velocity == sf::Vector2f(0.f, 0.f)) {
         data.current_velocity = sf::Vector2f(uni_speed, 0.f);
-        std::cout << "check3\n";
         data.next_velocty_at_pos = {};
         data.turn_position = {};
 
     }    
-    // Dory
-    current_tail.move(sf::Vector2f(data.current_velocity.x, data.current_velocity.y));
 
+
+
+
+
+
+
+    
+
+
+
+
+
+    sf::Vector2f tile = get_current_tile(current_tail);
+    sf::Vector2f intended_pos = tail_to_follow.getPosition();//get_center_position_of_tile(tile.x, tile.y);
+
+    sf::Vector2f current_position = current_tail.getPosition(); // this returns top-left pos and not center pos || radius of circle is 20 -> gets us real center(but its not needed because all are offset by this)
+    float distance = -1;
+    if (!data.turn_position.empty()) {
+        distance = distance_between_two_pos(current_position, data.turn_position[0]);
+    }
+    else {
+        distance = 89;
+    }
+
+    /*&& data.next_velocty_at_pos.empty() will work for a small snake but once large enough it will look strange and break */
+    if (!data.next_velocty_at_pos.empty() && distance > 89) {
+        std::cout << "distance until turn: " << distance << "\n";
+    }
+
+    if (x_velocity == data.current_velocity.x && x_velocity != 0 && (data.next_velocty_at_pos.empty() || distance > 89)) { // if going in straight line along x-axis
+        //ensures in line with head
+        float delta_y = intended_pos.y - current_position.y;
+        current_tail.move(sf::Vector2f(0, delta_y));
+        //std::cout << "Adjusted Y by: " << delta_y << "\n";
+        //ensures distance from head (must be 44 away in opposite direction of movement)
+        float delta_x = intended_pos.x + (44 * speed_value * -data.current_velocity.x) - current_position.x;
+        current_tail.move(sf::Vector2f(delta_x, 0));
+
+    }
+    else if (y_velocity == data.current_velocity.y && y_velocity != 0 && (data.next_velocty_at_pos.empty() || distance > 89)) { // if going in straight line along x-axis
+        //ensures in line with head
+        float delta_x = intended_pos.x - current_position.x;
+        current_tail.move(sf::Vector2f(delta_x, 0));
+        //std::cout << "Adjusted X by: " << delta_x << "\n";
+        //ensures distance from head (must be 44 away in opposite direction of movement)| the direction of where the 44 is offset depends ton the velocity(to multiply the velocity and only get the pos/neg direction I multiple it by speed_value to make it 1 and keep the 44)
+        float delta_y = intended_pos.y + (44 * speed_value * -data.current_velocity.y) - current_position.y;
+        current_tail.move(sf::Vector2f(0, delta_y));
+
+    }
+    else {
+        // Dory
+        current_tail.move(sf::Vector2f(data.current_velocity.x, data.current_velocity.y));
+        //std::cout << "moved: " << data.current_velocity.x << ", " << data.current_velocity.y << "\n";
+    }
+    
 
     /* check if able to turn */
     sf::Vector2f tail_current_position = current_tail.getPosition();
@@ -584,42 +636,11 @@ void move_additional_tail(int iteration_int, sf::CircleShape& tail_to_follow, sf
 
 
 
-    sf::Vector2f tile = get_current_tile(current_tail);
-    sf::Vector2f intended_pos = tail_to_follow.getPosition();//get_center_position_of_tile(tile.x, tile.y);
+    
 
-    sf::Vector2f current_position = current_tail.getPosition(); // this returns top-left pos and not center pos || radius of circle is 20 -> gets us real center(but its not needed because all are offset by this)
+    
 
-    /*&& data.next_velocty_at_pos.empty() will work for a small snake but once large enough it will look strange and break */
-
-    // THIS DISTANCE THING AINT WORKING FIND ANOTHER FIX!!!!!!!!!!!!!
-    float distance = 89;
-    if (!data.turn_position.empty()) {
-        float distance = distance_between_two_pos(current_position, data.turn_position[0]);
-    }
-    else {
-        float distance = 89;
-    }
-    if (x_velocity == data.current_velocity.x && x_velocity != 0 && (data.next_velocty_at_pos.empty() || distance > 44)) { // if going in straight line along x-axis
-        //ensures in line with head
-        float delta_y = intended_pos.y - current_position.y;
-        current_tail.move(sf::Vector2f(0, delta_y));
-        //std::cout << "Adjusted Y by: " << delta_y << "\n";
-        //ensures distance from head (must be 44 away in opposite direction of movement)
-        float delta_x = intended_pos.x + (44 * speed_value * -data.current_velocity.x) - current_position.x;
-        current_tail.move(sf::Vector2f(delta_x, 0));
-
-    }
-
-    if (y_velocity == data.current_velocity.y && y_velocity != 0 && (data.next_velocty_at_pos.empty() || distance > 44)) { // if going in straight line along x-axis
-        //ensures in line with head
-        float delta_x = intended_pos.x - current_position.x;
-        current_tail.move(sf::Vector2f(delta_x, 0));
-        //std::cout << "Adjusted X by: " << delta_x << "\n";
-        //ensures distance from head (must be 44 away in opposite direction of movement)| the direction of where the 44 is offset depends ton the velocity(to multiply the velocity and only get the pos/neg direction I multiple it by speed_value to make it 1 and keep the 44)
-        float delta_y = intended_pos.y + (44 * speed_value * -data.current_velocity.y) - current_position.y;
-        current_tail.move(sf::Vector2f(0, delta_y));
-
-    }
+    
 
 }
 
