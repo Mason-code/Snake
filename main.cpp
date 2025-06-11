@@ -64,9 +64,9 @@ std::vector<sf::Vector2f> move_snake(sf::CircleShape& the_snake_circle);
 sf::Vector2f get_current_tile(sf::Transformable& item);
 sf::Vector2f get_center_position_of_tile(int x_tile, int y_tile);
 void add_tail(sf::CircleShape& head);
-void move_first_tail(int iteration_int, sf::CircleShape& iteratee_tail, sf::Vector2f new_velocity, sf::Vector2f new_position_of_turn, sf::CircleShape& snake_head);
+std::vector<sf::Vector2f> move_first_tail(int iteration_int, sf::CircleShape& iteratee_tail, sf::Vector2f new_velocity, sf::Vector2f new_position_of_turn, sf::CircleShape& snake_head);
 void add_additional_tail(sf::Vector2f final_tail_pos, int last_index);
-void move_additional_tail(int iteration_int, sf::CircleShape& tail_to_follow, sf::CircleShape& current_tail);
+std::vector<sf::Vector2f> move_additional_tail(int iteration_int, sf::CircleShape& iteratee_tail, sf::Vector2f new_velocity, sf::Vector2f new_position_of_turn, sf::CircleShape& snake_head);
 float distance_between_two_pos(sf::Vector2f pos_one, sf::Vector2f pos_two);
 
 
@@ -229,17 +229,18 @@ int main()
 
         int iteration_value = 0;
 
+        std::vector <sf::Vector2f> other_tail_values;
         for (auto& tail : snake_tail_vec) {
             
             if (iteration_value == 0) {
-                move_first_tail(iteration_value, tail.shape, tail_values[0], tail_values[1], snake_head);
+                other_tail_values = move_first_tail(iteration_value, tail.shape, tail_values[0], tail_values[1], snake_head);
                 window.draw(tail.shape);
                 iteration_value++;
                 continue;
             }
             else {
                 TailVectorData& prev_data = snake_tail_vec[iteration_value - 1];
-                move_additional_tail(iteration_value, prev_data.shape , tail.shape); // parameters -> the previous tail 
+                other_tail_values = move_additional_tail(iteration_value, tail.shape, other_tail_values[0], other_tail_values[1], prev_data.shape); // parameters -> the previous tail 
                 window.draw(tail.shape);
                 iteration_value++;
             }   
@@ -423,7 +424,7 @@ void add_tail(sf::CircleShape& head) {
 }
 
 // velocity (you know whether to get this based off the pos), position = sf::Vector2f(-1.f, -1.f)
-void move_first_tail(int iteration_int, sf::CircleShape& iteratee_tail, sf::Vector2f new_velocity, sf::Vector2f new_position_of_turn, sf::CircleShape& snake_head) {
+std::vector<sf::Vector2f> move_first_tail(int iteration_int, sf::CircleShape& iteratee_tail, sf::Vector2f new_velocity, sf::Vector2f new_position_of_turn, sf::CircleShape& snake_head) {
     float speed_value = 1 / uni_speed;
 
     TailVectorData& data = snake_tail_vec[iteration_int];
@@ -439,18 +440,10 @@ void move_first_tail(int iteration_int, sf::CircleShape& iteratee_tail, sf::Vect
 
 
     if (new_position_of_turn != sf::Vector2f(-1.f, -1.f)) {
-
-        
-        for (int i = 0; i < snake_tail_vec.size(); i++) {
-            TailVectorData& shared_data = snake_tail_vec[i];
-            if (std::find(shared_data.turn_position.begin(), shared_data.turn_position.end(), new_position_of_turn) == shared_data.turn_position.end()) { // if (!shared_data.turn_position.contains(new_position_of_turn)) {
-                shared_data.turn_position.push_back(new_position_of_turn);
-                shared_data.next_velocty_at_pos.push_back(new_velocity);
-            }
-            
+        if (std::find(data.turn_position.begin(), data.turn_position.end(), new_position_of_turn) == data.turn_position.end()) { // if (!shared_data.turn_position.contains(new_position_of_turn)) {
+            data.turn_position.push_back(new_position_of_turn);
+            data.next_velocty_at_pos.push_back(new_velocity);
         }
-      
-
     } else {
         // nothing new; just keep swimming
         iteratee_tail.move(sf::Vector2f(data.current_velocity.x, data.current_velocity.y)); 
@@ -523,9 +516,8 @@ void move_first_tail(int iteration_int, sf::CircleShape& iteratee_tail, sf::Vect
 
     
 
-
     
-
+    return { new_velocity, new_position_of_turn };
 }
 
 
@@ -543,47 +535,271 @@ void add_additional_tail(sf::Vector2f final_tail_pos, int last_index) {
 
 
 
-void move_additional_tail(int iteration_int, sf::CircleShape& tail_to_follow, sf::CircleShape& current_tail) {
+//void move_additional_tail(int iteration_int, sf::CircleShape& tail_to_follow, sf::CircleShape& current_tail) {
+//
+//    float speed_value = 1 / uni_speed;
+//
+//    TailVectorData& data = snake_tail_vec[iteration_int];
+//
+//
+//    if (!data.active) {
+//        return;
+//    }
+//
+//    //jumpstart
+//    if ((x_velocity != 0 || y_velocity != 0) && data.current_velocity == sf::Vector2f(0.f, 0.f)) {
+//        data.current_velocity = sf::Vector2f(uni_speed, 0.f);
+//        data.next_velocty_at_pos = {};
+//        data.turn_position = {};
+//
+//    }    
+//
+//
+//    
+//        
+//
+//    /* check if able to turn */
+//    sf::Vector2f tail_current_position = current_tail.getPosition();
+//    // checks if tail is past turn point
+//    // epsilon tolerance
+//    float epsilon = 2.0f; // determines how close tail gets to head before direction changes
+// 
+//    bool past_turn_point = false;
+//    if (!data.turn_position.empty()) {
+//        sf::Vector2f tp = data.turn_position[0];
+//        if (data.current_velocity.x != 0 && std::abs(tp.x - tail_current_position.x) <= epsilon)
+//            past_turn_point = true;
+//        if (data.current_velocity.y != 0 && std::abs(tp.y - tail_current_position.y) <= epsilon)
+//            past_turn_point = true;
+//    }
+//
+//
+//
+//    if (past_turn_point) {
+//        
+//        data.current_velocity = data.next_velocty_at_pos[0];
+//        data.next_velocty_at_pos.erase(data.next_velocty_at_pos.begin());
+//        data.turn_position.erase(data.turn_position.begin());
+//
+//    }
+//
+//
+//    bool corrected = false;
+//
+//    
+//
+//    
+//    sf::Vector2f tile = get_current_tile(current_tail);
+//    sf::Vector2f intended_pos = tail_to_follow.getPosition();//get_center_position_of_tile(tile.x, tile.y);
+//
+//    sf::Vector2f current_position = current_tail.getPosition(); // this returns top-left pos and not center pos || radius of circle is 20 -> gets us real center(but its not needed because all are offset by this)
+//    float distance = -1;
+//    if (!data.turn_position.empty()) {
+//        distance = distance_between_two_pos(current_position, data.turn_position[0]);
+//    }
+//    else {
+//        distance = 89;
+//    }
+//
+//    /*&& data.next_velocty_at_pos.empty() will work for a small snake but once large enough it will look strange and break */
+//    /*if (!data.next_velocty_at_pos.empty()) {
+//        std::cout << "distance until turn: " << distance << "\n";
+//    }*/
+//
+//    float prvnt_snapping = 1.f;
+//    if (data.current_velocity.x != 0 && (data.next_velocty_at_pos.empty())) { // if going in straight line along x-axis
+//        //ensures in line with head
+//        float delta_y = intended_pos.y - current_position.y;
+//        if (delta_y > prvnt_snapping) {
+//            current_tail.move(sf::Vector2f(0, delta_y));
+//            corrected = true;
+//        }
+//        //ensures distance from head (must be 44 away in opposite direction of movement)
+//        float delta_x = intended_pos.x + (44 * speed_value * -data.current_velocity.x) - current_position.x;
+//        if (delta_x > prvnt_snapping) {
+//            current_tail.move(sf::Vector2f(delta_x, 0));
+//            corrected = true;
+//        }
+//
+//    }
+//    tile = get_current_tile(current_tail);
+//    intended_pos = tail_to_follow.getPosition();//get_center_position_of_tile(tile.x, tile.y);
+//    current_position = current_tail.getPosition();
+//    if (data.current_velocity.y != 0 && (data.next_velocty_at_pos.empty())) { // if going in straight line along x-axis
+//        //ensures in line with head
+//        float delta_x = intended_pos.x - current_position.x;
+//        if (delta_x > prvnt_snapping) {
+//            current_tail.move(sf::Vector2f(delta_x, 0));
+//            corrected = true;
+//        }
+//        //std::cout << "Adjusted X by: " << delta_x << "\n";
+//        //ensures distance from head (must be 44 away in opposite direction of movement)| the direction of where the 44 is offset depends ton the velocity(to multiply the velocity and only get the pos/neg direction I multiple it by speed_value to make it 1 and keep the 44)
+//        float delta_y = intended_pos.y + (44 * speed_value * -data.current_velocity.y) - current_position.y;
+//        if (delta_y > prvnt_snapping) { // change this epsilon value to prevent snapping
+//            current_tail.move(sf::Vector2f(0, delta_y));
+//            corrected = true;
+//        }
+//        
+//
+//    }
+//    
+//    if (!corrected) {
+//        // Dory
+//        current_tail.move(sf::Vector2f(data.current_velocity.x, data.current_velocity.y));
+//        //std::cout << "moved: " << data.current_velocity.x << ", " << data.current_velocity.y << "\n";
+//
+//    }
+//    
+//
+//
+//}
 
+
+//void move_additional_tail(int iteration_int) {
+//
+//    float speed_value = 1 / uni_speed;
+//
+//    TailVectorData& data = snake_tail_vec[iteration_int];
+//    sf::CircleShape& iteratee_tail = data.shape;
+//
+//    TailVectorData& prev = snake_tail_vec[iteration_int - 1];
+//    sf::CircleShape& snake_head = prev.shape;
+//
+//    if (!data.active) {
+//        return;
+//    }
+//
+//    //jumpstart
+//    if ((x_velocity != 0 || y_velocity != 0) && data.current_velocity == sf::Vector2f(0.f, 0.f)) {
+//        std::cout << "huh?" << "\n";
+//        data.current_velocity = sf::Vector2f(uni_speed, 0.f);
+//        data.next_velocty_at_pos = {};
+//        data.turn_position = {};
+//
+//    }
+//
+//    // Dory
+//    iteratee_tail.move(sf::Vector2f(data.current_velocity.x, data.current_velocity.y));
+//    //std::cout << "moved: " << data.current_velocity.x << ", " << data.current_velocity.y << "\n";
+//
+//
+//    /* check if able to turn */
+//    sf::Vector2f tail_current_position = iteratee_tail.getPosition();
+//    // checks if tail is past turn point
+//    // epsilon tolerance
+//    float epsilon = 2.0f; // determines how close tail gets to head before direction changes
+//
+//    bool past_turn_point = // this all depends on direction so it gets messy, thats why i just did absolute v
+//        (!data.turn_position.empty() && std::abs(data.turn_position[0].x - tail_current_position.x) <= epsilon) &&
+//        (!data.turn_position.empty() && std::abs(data.turn_position[0].y - tail_current_position.y) <= epsilon);
+//
+//
+//
+//
+//
+//    if (past_turn_point) {
+//
+//        data.current_velocity = data.next_velocty_at_pos[0];
+//        data.next_velocty_at_pos.erase(data.next_velocty_at_pos.begin());
+//        data.turn_position.erase(data.turn_position.begin());
+//
+//    }
+//
+//
+//
+//
+//
+//
+//    sf::Vector2f tile = get_current_tile(iteratee_tail);
+//    sf::Vector2f intended_pos = snake_head.getPosition();//get_center_position_of_tile(tile.x, tile.y);
+//
+//    sf::Vector2f current_position = iteratee_tail.getPosition(); // this returns top-left pos and not center pos || radius of circle is 20 -> gets us real center(but its not needed because all are offset by this)
+//
+//
+//    /*&& data.next_velocty_at_pos.empty() will work for a small snake but once large enough it will look strange and break */
+//    /*if (!data.next_velocty_at_pos.empty()) {
+//        std::cout << "distance until turn: " << distance << "\n";
+//    }*/
+//
+//    if (x_velocity == data.current_velocity.x && x_velocity != 0 && data.next_velocty_at_pos.empty()) { // if going in straight line along x-axis
+//        //ensures in line with head
+//        float delta_y = intended_pos.y - current_position.y;
+//        iteratee_tail.move(sf::Vector2f(0, delta_y));
+//        //std::cout << "Adjusted Y by: " << delta_y << "\n";
+//        //ensures distance from head (must be 44 away in opposite direction of movement)
+//        float delta_x = intended_pos.x + (44 * speed_value * -data.current_velocity.x) - current_position.x;
+//        iteratee_tail.move(sf::Vector2f(delta_x, 0));
+//
+//    }
+//    tile = get_current_tile(iteratee_tail);
+//    intended_pos = snake_head.getPosition();//get_center_position_of_tile(tile.x, tile.y);
+//    current_position = iteratee_tail.getPosition();
+//    if (y_velocity == data.current_velocity.y && y_velocity != 0 && data.next_velocty_at_pos.empty()) { // if going in straight line along x-axis
+//        //ensures in line with head
+//        float delta_x = intended_pos.x - current_position.x;
+//        iteratee_tail.move(sf::Vector2f(delta_x, 0));
+//        //std::cout << "Adjusted X by: " << delta_x << "\n";
+//        //ensures distance from head (must be 44 away in opposite direction of movement)| the direction of where the 44 is offset depends ton the velocity(to multiply the velocity and only get the pos/neg direction I multiple it by speed_value to make it 1 and keep the 44)
+//        float delta_y = intended_pos.y + (44 * speed_value * -data.current_velocity.y) - current_position.y;
+//        iteratee_tail.move(sf::Vector2f(0, delta_y));
+//
+//    }
+//
+//
+//
+//
+//
+//}
+//
+
+
+
+std::vector<sf::Vector2f> move_additional_tail(int iteration_int, sf::CircleShape& iteratee_tail, sf::Vector2f new_velocity, sf::Vector2f new_position_of_turn, sf::CircleShape& snake_head) {
     float speed_value = 1 / uni_speed;
 
     TailVectorData& data = snake_tail_vec[iteration_int];
 
-
     if (!data.active) {
-        return;
+        return { new_velocity, new_position_of_turn };
     }
 
     //jumpstart
     if ((x_velocity != 0 || y_velocity != 0) && data.current_velocity == sf::Vector2f(0.f, 0.f)) {
         data.current_velocity = sf::Vector2f(uni_speed, 0.f);
+        //std::cout << "check3\n";
         data.next_velocty_at_pos = {};
         data.turn_position = {};
 
-    }    
+    }
 
 
-    
-    // Dory
-    current_tail.move(sf::Vector2f(data.current_velocity.x, data.current_velocity.y));
-    //std::cout << "moved: " << data.current_velocity.x << ", " << data.current_velocity.y << "\n";
-    
-    
+    if (new_position_of_turn != sf::Vector2f(-1.f, -1.f)) {
+        if (std::find(data.turn_position.begin(), data.turn_position.end(), new_position_of_turn) == data.turn_position.end()) { // if (!shared_data.turn_position.contains(new_position_of_turn)) {
+            data.turn_position.push_back(new_position_of_turn);
+            data.next_velocty_at_pos.push_back(new_velocity);
+        }
+    } else {
+        // nothing new; just keep swimming
+        iteratee_tail.move(sf::Vector2f(data.current_velocity.x, data.current_velocity.y));
+    }
 
     /* check if able to turn */
-    sf::Vector2f tail_current_position = current_tail.getPosition();
+    sf::Vector2f tail_current_position = iteratee_tail.getPosition();
     // checks if tail is past turn point
     // epsilon tolerance
     float epsilon = 2.0f; // determines how close tail gets to head before direction changes
- 
     bool past_turn_point = // this all depends on direction so it gets messy, thats why i just did absolute v
         (!data.turn_position.empty() && std::abs(data.turn_position[0].x - tail_current_position.x) <= epsilon) &&
         (!data.turn_position.empty() && std::abs(data.turn_position[0].y - tail_current_position.y) <= epsilon);
 
 
 
+
+
+
+
     if (past_turn_point) {
-        
+
         data.current_velocity = data.next_velocty_at_pos[0];
         data.next_velocty_at_pos.erase(data.next_velocty_at_pos.begin());
         data.turn_position.erase(data.turn_position.begin());
@@ -591,53 +807,55 @@ void move_additional_tail(int iteration_int, sf::CircleShape& tail_to_follow, sf
     }
 
 
+    sf::Vector2f tile = get_current_tile(iteratee_tail);
+    sf::Vector2f intended_pos = snake_head.getPosition();//get_center_position_of_tile(tile.x, tile.y);
 
-    
+    sf::Vector2f current_position = iteratee_tail.getPosition(); // this returns top-left pos and not center pos || radius of circle is 20 -> gets us real center(but its not needed because all are offset by this)
 
-    
-    sf::Vector2f tile = get_current_tile(current_tail);
-    sf::Vector2f intended_pos = tail_to_follow.getPosition();//get_center_position_of_tile(tile.x, tile.y);
 
-    sf::Vector2f current_position = current_tail.getPosition(); // this returns top-left pos and not center pos || radius of circle is 20 -> gets us real center(but its not needed because all are offset by this)
-    float distance = -1;
+    /*&& data.next_velocty_at_pos.empty() will work for a small snake but once large enough it will look strange and break
+    so we need to do && distance between current position and turn position > 88 */
+    /*float distance = 89;
     if (!data.turn_position.empty()) {
-        distance = distance_between_two_pos(current_position, data.turn_position[0]);
+        float distance = distance_between_two_pos(current_position, data.turn_position[0]);
     }
     else {
-        distance = 89;
-    }
-
-    /*&& data.next_velocty_at_pos.empty() will work for a small snake but once large enough it will look strange and break */
-    /*if (!data.next_velocty_at_pos.empty()) {
-        std::cout << "distance until turn: " << distance << "\n";
+        float distance = 89;
     }*/
 
-    if (x_velocity == data.current_velocity.x && x_velocity != 0 && (data.next_velocty_at_pos.empty())) { // if going in straight line along x-axis
+    if (x_velocity == data.current_velocity.x && x_velocity != 0 && data.next_velocty_at_pos.empty()) { // if going in straight line along x-axis
         //ensures in line with head
         float delta_y = intended_pos.y - current_position.y;
-        current_tail.move(sf::Vector2f(0, delta_y));
+        iteratee_tail.move(sf::Vector2f(0, delta_y));
         //std::cout << "Adjusted Y by: " << delta_y << "\n";
         //ensures distance from head (must be 44 away in opposite direction of movement)
         float delta_x = intended_pos.x + (44 * speed_value * -data.current_velocity.x) - current_position.x;
-        current_tail.move(sf::Vector2f(delta_x, 0));
+        iteratee_tail.move(sf::Vector2f(delta_x, 0));
 
     }
-    tile = get_current_tile(current_tail);
-    intended_pos = tail_to_follow.getPosition();//get_center_position_of_tile(tile.x, tile.y);
-    current_position = current_tail.getPosition();
-    if (y_velocity == data.current_velocity.y && y_velocity != 0 && (data.next_velocty_at_pos.empty())) { // if going in straight line along x-axis
+    tile = get_current_tile(iteratee_tail);
+    intended_pos = snake_head.getPosition();//get_center_position_of_tile(tile.x, tile.y);
+    current_position = iteratee_tail.getPosition();
+    if (y_velocity == data.current_velocity.y && y_velocity != 0 && data.next_velocty_at_pos.empty()) { // if going in straight line along x-axis
         //ensures in line with head
         float delta_x = intended_pos.x - current_position.x;
-        current_tail.move(sf::Vector2f(delta_x, 0));
+        iteratee_tail.move(sf::Vector2f(delta_x, 0));
         //std::cout << "Adjusted X by: " << delta_x << "\n";
         //ensures distance from head (must be 44 away in opposite direction of movement)| the direction of where the 44 is offset depends ton the velocity(to multiply the velocity and only get the pos/neg direction I multiple it by speed_value to make it 1 and keep the 44)
         float delta_y = intended_pos.y + (44 * speed_value * -data.current_velocity.y) - current_position.y;
-        current_tail.move(sf::Vector2f(0, delta_y));
+        iteratee_tail.move(sf::Vector2f(0, delta_y));
 
     }
-    
+
+
+
+
+
+    return { new_velocity, new_position_of_turn };
+
 
 }
+
 
 
 float distance_between_two_pos(sf::Vector2f pos_one, sf::Vector2f pos_two) {
