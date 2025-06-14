@@ -22,6 +22,9 @@ multi que movement strat.
 
 //global
 
+
+int adjustment = 0;
+
 // quick vector
 std::deque<sf::Vector2f> need_turn;
 
@@ -38,7 +41,7 @@ float y_velocity = 0;
 struct TailVectorData {
     sf::CircleShape shape;
     bool active = false; // ready to move: 44 away
-    std::vector<sf::Vector2f> every_position;
+    std::deque<sf::Vector2f> every_position;
 };
 
 std::vector<TailVectorData> snake_tail_vec = {};
@@ -60,7 +63,7 @@ void add_tail(sf::CircleShape& last_tail);
 void move_tail(sf::CircleShape& current_tail, bool ready_to_move, int tail_iteration);
 float distance_between_two_pos(sf::Vector2f pos_one, sf::Vector2f pos_two);
 bool apple_is_on_snake(sf::Sprite& the_apple_sprite);
-
+void game_over();
 
 
 int main()
@@ -81,13 +84,14 @@ int main()
     sf::RectangleShape header_rectangle({ 800.f, 70.f });
     header_rectangle.setFillColor(sf::Color(74, 117, 44));
     
-    // map
-    std::vector<sf::RectangleShape> map_tiles = {};
+    // map -> array > vector
+    std::array<sf::RectangleShape, 17*15> map_tiles;
 
     float tile_width = 44;
     float tile_height = 44;
     sf::RectangleShape tile({ tile_width, tile_height });
     tile.setPosition({ -tile_width + 25, 70 + 35 });
+    int index = 0;
     for (int i = 0; i < 15; i++) {
         for (int k = 0; k < 17; k++) {
             tile.move({ tile_width, 0 });
@@ -99,7 +103,7 @@ int main()
                 tile.setFillColor(sf::Color(170, 215, 81));
             }
 
-            map_tiles.push_back(tile);
+            map_tiles[index++] = tile;
         }
         tile.move({ tile_width * -17, tile_height });
     }
@@ -121,6 +125,31 @@ int main()
 
     apple_sprite.setScale({ scale_x, scale_y });
     /*Apple--End*/
+
+
+
+
+    /*TaskBar_AppleCount--Start*/
+    sf::Texture apple_texture_two;
+    if (!apple_texture_two.loadFromFile("apple.png")) {
+        return -1;
+    }
+    sf::Sprite task_bar_apple(apple_texture_two);
+    apple_texture_two.setSmooth(true);
+    task_bar_apple.setPosition({ 28.5, 1});
+
+    sf::Vector2u texture_size_two = apple_texture_two.getSize();
+
+    // Calculate the scale factors
+    float scale_x_two = 50.f / texture_size_two.x;
+    float scale_y_two = 70.f / texture_size_two.y;
+
+    task_bar_apple.setScale({ scale_x_two, scale_y_two });
+
+
+
+    sf::Font aligatai_font("Aligatai_YzzL.ttf");
+    /*TaskBar_AppleCount--End*/
     
 
 
@@ -205,6 +234,7 @@ int main()
         }
 
 
+        TailVectorData& sh = snake_tail_vec[0];
 
         int iteration_value = 0;
         int ultima_value = snake_tail_vec.size() -1;
@@ -219,16 +249,24 @@ int main()
             window.draw(tail.shape);
             iteration_value++;
             
+
+            if (tail.active && distance_between_two_pos(tail.shape.getPosition(), sh.shape.getPosition()) < 15 ) game_over();
+
            
         }
       
 
 
-        TailVectorData& sh = snake_tail_vec[0];
+        
+        
 
-            
+
+
+
         move_snake();
         window.draw(sh.shape);
+        sf::Vector2f snake_pos = sh.shape.getPosition();
+        if (!(snake_pos.x > 25 && snake_pos.x < 765) || !(snake_pos.y > 105 && snake_pos.y < 763)) game_over();
   
         
         // do I move last tail?
@@ -248,18 +286,34 @@ int main()
         sf::Vector2f snake_location = get_current_tile(sh.shape);
 
         if (apple_location == snake_location) {
-            rand_apple(apple_sprite); 
-            while (apple_is_on_snake(apple_sprite)) {
-                rand_apple(apple_sprite);
-            }
-            apples_eaten++;
-
             TailVectorData& data = snake_tail_vec.back();
             add_tail(data.shape);
 
+            rand_apple(apple_sprite); 
+            while (apple_is_on_snake(apple_sprite)) {
+                // if infinite loop game over
+                rand_apple(apple_sprite);
+            }
+
+
+            apples_eaten++;
+            
+
         }
 
+        sf::Text text(aligatai_font);
+        text.setString(std::to_string(apples_eaten));
+        text.setCharacterSize(70); // in pixels, not points!
+        text.setFillColor(sf::Color::Black);
+        text.setPosition({ 80, -7 });
+        window.draw(text);
+
+
         window.draw(apple_sprite);
+        
+
+
+        window.draw(task_bar_apple);
 
 
         // end the current frame
@@ -274,27 +328,32 @@ int main()
 
 
 bool apple_is_on_snake(sf::Sprite& the_apple_sprite) {
-    for (auto& i : snake_tail_vec) {
-        if (distance_between_two_pos(i.shape.getPosition(), the_apple_sprite.getPosition()) <= 20) return true;
+    TailVectorData& data = snake_tail_vec[0];
+    for (auto& pos : data.every_position) { // sorry if this is disgusting
+        float distance = distance_between_two_pos(pos, the_apple_sprite.getPosition());
+        if (distance < 22) {
+            return true;
+        }
     }
+
     return false;
 }
 
 
 sf::Sprite rand_apple(sf::Sprite& the_apple_sprite) {
-   /* fancy fucking random shit*/
+   /* fancy  random */
     // Create a random device and seed the random number generator
     std::random_device rd;
     std::mt19937 gen(rd());
 
     // Define the range [0, 15]
-    std::uniform_int_distribution<> distrib_y(1, 2); //15
+    std::uniform_int_distribution<> distrib_y(1, 15);
 
     // Generate and print a random number in the range [0, 15]
     float random_y = distrib_y(gen);
 
     // rando y
-    std::uniform_int_distribution<> distrib_x(1, 2); // 17
+    std::uniform_int_distribution<> distrib_x(1, 17); 
     float random_x = distrib_x(gen);
 
 
@@ -357,6 +416,12 @@ void move_snake() {
      the_snake_circle.move(sf::Vector2f(x_velocity, y_velocity));
     
      data.every_position.push_back(the_snake_circle.getPosition());
+
+     if (data.every_position.size() > (25*17*55)+2) {
+         data.every_position.pop_front();
+         adjustment++;
+     }
+
     }
     
 
@@ -413,8 +478,8 @@ void move_tail(sf::CircleShape& current_tail, bool ready_to_move, int tail_itera
         return;
     }
 
-    int frame = frame_count - (55 * tail_iteration);
-    if (frame > positions.every_position.size()) frame = positions.every_position.size();
+    int frame = frame_count - (55 * tail_iteration) - adjustment; // 55 is just for distancing bewteen tails
+    if (frame > positions.every_position.size()) frame = positions.every_position.size()-1;
 
     current_tail.setPosition(positions.every_position[frame]);
 
@@ -427,4 +492,10 @@ float distance_between_two_pos(sf::Vector2f pos_one, sf::Vector2f pos_two) {
     float dy = pos_two.y - pos_one.y;
     float distance = std::sqrt(dx * dx + dy * dy); 
     return distance;
+}
+
+
+
+void game_over() {
+    std::cout << "Game Over" << "\n";
 }
