@@ -18,15 +18,23 @@ multi que movement strat.
 #include <cmath>
 #include <deque>
 
+//#include <imgui.h>
+//#include <imgui-SFML.h>
 
+
+
+enum class GameState {
+    MAIN_MENU,
+    GAME_PLAY,
+    GAME_OVER
+};
+GameState currentState = GameState::MAIN_MENU;
 
 //global
-
-
 int adjustment = 0;
 
 // quick vector
-std::deque<sf::Vector2f> need_turn;
+std::deque<sf::Vector2f> need_turn = {};
 
 
 /*apple*/
@@ -35,7 +43,7 @@ sf::Texture apple_texture;
 /*snake*/
 float x_velocity = 0;
 float y_velocity = 0;
-
+const int movement_offset = 50;
 
 /*tail*/
 struct TailVectorData {
@@ -47,12 +55,11 @@ struct TailVectorData {
 std::vector<TailVectorData> snake_tail_vec = {};
 
 
-float uni_speed = 0.75f; //0.8
+const float uni_speed = .8f; //.75
 int apples_eaten = 0;
 
 int frame_count = 0;
 
-sf::Vector2f last_direction_change_location = sf::Vector2f(-1.f, -1.f);
 
 //  function declarations
 sf::Sprite rand_apple(sf::Sprite& the_apple_sprite);
@@ -63,17 +70,13 @@ void add_tail(sf::CircleShape& last_tail);
 void move_tail(sf::CircleShape& current_tail, bool ready_to_move, int tail_iteration);
 float distance_between_two_pos(sf::Vector2f pos_one, sf::Vector2f pos_two);
 bool apple_is_on_snake(sf::Sprite& the_apple_sprite);
-void game_over();
-
+void setup_snake();
 
 int main()
 {
 
     // create the window
     sf::RenderWindow window(sf::VideoMode({ 800, 800 }), "Snake");
-
-
-
 
     /*Map--Start*/
     //map border
@@ -149,26 +152,94 @@ int main()
 
 
     sf::Font aligatai_font("Aligatai_YzzL.ttf");
+    sf::Text apple_text(aligatai_font);
+    apple_text.setCharacterSize(70); // in pixels, not points!
+    apple_text.setFillColor(sf::Color::White);
+    apple_text.setPosition({ 79, -9 });
     /*TaskBar_AppleCount--End*/
     
 
 
-    /*Snake_head--Start*/
-    sf::CircleShape snake_head(20.f);
-    snake_head.setFillColor(sf::Color::Blue);
-    snake_head.setPosition({ -20 + 25 + 22 + (44 * (4 - 1)), -20 + 105 + 22 + (44 * (8 - 1)) });
-    
-    TailVectorData data;
-    data.shape = snake_head;
-    data.active = true;
-    snake_tail_vec.push_back(data);
-    /*Snake_head--End*/
 
 
-    //change amount for fun
-    for (int i = 0; i < 2;i++) {
-        add_tail(data.shape);
+
+    /*Main Menu--Start*/
+
+    // menu window
+    sf::RectangleShape background_rectangle({ 430.f, 600.f });
+    background_rectangle.setFillColor(sf::Color::Transparent);
+    background_rectangle.setPosition(sf::Vector2f((window.getSize().x / 2) - 215, (window.getSize().y / 2) - 300));
+    background_rectangle.setOutlineColor(sf::Color(74, 117, 44));
+    background_rectangle.setOutlineThickness(10.f);
+
+    // Highsccore window sf::Color(77,193,249)
+    sf::RectangleShape hs_win_rectangle({ 390.f, 300.f });
+    hs_win_rectangle.setFillColor(sf::Color(77, 193, 249));
+    hs_win_rectangle.setPosition(sf::Vector2f((window.getSize().x / 2) - 195, background_rectangle.getPosition().y + 30));
+    hs_win_rectangle.setOutlineColor(sf::Color(87, 138, 52));
+    hs_win_rectangle.setOutlineThickness(5.f);
+
+    //play button
+    sf::RectangleShape play_btn_rectangle({ 390.f, 80.f });
+    play_btn_rectangle.setFillColor(sf::Color(87, 138, 52));
+    play_btn_rectangle.setPosition(sf::Vector2f(hs_win_rectangle.getPosition().x, hs_win_rectangle.getPosition().y + hs_win_rectangle.getSize().y + 20));
+    play_btn_rectangle.setOutlineThickness(3.f);
+    play_btn_rectangle.setOutlineColor(sf::Color::Transparent);
+
+    sf::Text play_text(aligatai_font);
+    play_text.setString("Start!");
+    play_text.setCharacterSize(80); // in pixels, not points!
+    play_text.setFillColor(sf::Color::White);
+    play_text.setPosition({ (play_btn_rectangle.getPosition().x + play_btn_rectangle.getSize().x / 2.f) - 72,
+    (play_btn_rectangle.getPosition().y + play_btn_rectangle.getSize().y / 2.f) - 60 });
+
+    // exit button
+    sf::RectangleShape exit_btn_rectangle({ 390.f, 80.f });
+    exit_btn_rectangle.setFillColor(sf::Color(87, 138, 52));
+    exit_btn_rectangle.setPosition(sf::Vector2f(play_btn_rectangle.getPosition().x, play_btn_rectangle.getPosition().y + play_btn_rectangle.getSize().y + 20));
+    exit_btn_rectangle.setOutlineThickness(3.f);
+    exit_btn_rectangle.setOutlineColor(sf::Color::Transparent);
+
+
+    sf::Text exit_text(aligatai_font);
+    exit_text.setString("Exit");
+    exit_text.setCharacterSize(80); // in pixels, not points!
+    exit_text.setFillColor(sf::Color::White);
+    exit_text.setPosition({ (exit_btn_rectangle.getPosition().x + exit_btn_rectangle.getSize().x / 2.f) - 58,
+    (exit_btn_rectangle.getPosition().y + exit_btn_rectangle.getSize().y / 2.f) - 60 });
+
+    // blur background
+    sf::Texture blur_texture;
+    if (!blur_texture.loadFromFile("blur.jpg")) {
+        return -1;
     }
+
+    sf::Sprite blur_sprite(blur_texture);
+
+    // Desired size
+    float target_width = 800;
+    float target_height = 800;
+
+    // Get original size of the image
+    sf::Vector2u textureSize = blur_texture.getSize();
+
+    // Calculate scale factors
+    scale_x = target_width / texture_size.x;
+    scale_y = target_height / texture_size.y;
+
+    // Apply scale
+    blur_sprite.setScale({ scale_x, scale_y });
+    blur_sprite.setPosition(sf::Vector2f(0, 0));
+    blur_sprite.setColor(sf::Color(255, 255, 255, 155)); 
+
+
+    /*Main Menu--End*/
+
+
+
+
+
+    
     
 
     
@@ -223,6 +294,8 @@ int main()
         // clear the window with black color
         window.clear(sf::Color::Black);
 
+        
+
         // draw everything here...
         window.draw(map_border);
         window.draw(header_rectangle);
@@ -234,87 +307,135 @@ int main()
         }
 
 
-        TailVectorData& sh = snake_tail_vec[0];
+        switch (currentState) {
+            case GameState::GAME_PLAY: {
+                
+                TailVectorData& sh = snake_tail_vec[0];
 
-        int iteration_value = 0;
-        int ultima_value = snake_tail_vec.size() -1;
-        for (auto& tail : snake_tail_vec) {
-            if (iteration_value == 0) {
-                tail.active = true;
-                iteration_value++;
-                continue;
+                int iteration_value = 0;
+                int ultima_value = snake_tail_vec.size() - 1;
+                for (auto& tail : snake_tail_vec) {
+                    if (iteration_value == 0) {
+                        tail.active = true;
+                        iteration_value++;
+                        continue;
+                    }
+                    if (!tail.active && iteration_value < ultima_value) ultima_value = iteration_value;
+                    move_tail(tail.shape, tail.active, iteration_value);
+                    window.draw(tail.shape);
+                    iteration_value++;
+
+                    if (tail.active && distance_between_two_pos(tail.shape.getPosition(), sh.shape.getPosition()) < 15) currentState = GameState::MAIN_MENU;
+                    
+                    
+
+                }
+                move_snake();
+                window.draw(sh.shape);
+                sf::Vector2f snake_pos = sh.shape.getPosition();
+                if (!(snake_pos.x > 25 && snake_pos.x < 765) || !(snake_pos.y > 105 && snake_pos.y < 763)) currentState = GameState::MAIN_MENU; 
+                
+
+
+                // do I move last tail?
+                TailVectorData& ultima = snake_tail_vec[ultima_value];
+                if (!ultima.active && snake_tail_vec.size() > 1) {
+                    TailVectorData& penultima = snake_tail_vec[ultima_value - 1];
+                    float distance = distance_between_two_pos(penultima.shape.getPosition(), ultima.shape.getPosition()); // math oooooo
+                    if (distance >= 44) {
+                        ultima.active = true;
+                    }
+                }
+
+
+                sh = snake_tail_vec[0];
+                // Collision detection
+                sf::Vector2f apple_location = get_current_tile(apple_sprite);
+                sf::Vector2f snake_location = get_current_tile(sh.shape);
+
+                if (apple_location == snake_location) {
+                    TailVectorData& data = snake_tail_vec.back();
+                    add_tail(data.shape);
+
+                    rand_apple(apple_sprite);
+                    while (apple_is_on_snake(apple_sprite)) {
+                        // if infinite loop game over
+                        rand_apple(apple_sprite);
+                    }
+
+
+                    apples_eaten++;
+
+
+                }
+
+
+                apple_text.setString(std::to_string(apples_eaten));
+                window.draw(apple_text);
+
+
+                window.draw(apple_sprite);
+
+
+
+                window.draw(task_bar_apple);
+
+
+                break;
+
+
             }
-            if (!tail.active && iteration_value < ultima_value ) ultima_value = iteration_value;
-            move_tail(tail.shape, tail.active, iteration_value);
-            window.draw(tail.shape);
-            iteration_value++;
-            
+            case GameState::MAIN_MENU: {
+                window.draw(blur_sprite);
+                window.draw(background_rectangle);
+                window.draw(exit_btn_rectangle);
+                window.draw(play_btn_rectangle);
+                window.draw(hs_win_rectangle);
+                play_btn_rectangle.setOutlineColor(sf::Color::Transparent);
+                exit_btn_rectangle.setOutlineColor(sf::Color::Transparent);
 
-            if (tail.active && distance_between_two_pos(tail.shape.getPosition(), sh.shape.getPosition()) < 15 ) game_over();
+                sf::Vector2i mousePixelPos = sf::Mouse::getPosition(window); // pixel coords
+                sf::Vector2f mouseWorldPos = window.mapPixelToCoords(mousePixelPos); // convert to world coords
+                if (play_btn_rectangle.getGlobalBounds().contains(mouseWorldPos)) {
+                    play_btn_rectangle.setOutlineColor(sf::Color::Black);
+                    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {                        
+                        //reset game values
+                        adjustment = 0;
+                        need_turn = {};
+                        x_velocity = 0;
+                        y_velocity = 0;
+                        snake_tail_vec = {};
+                        apples_eaten = 0;
+                        frame_count = 0;
 
-           
-        }
-      
+                        setup_snake();
+                        currentState = GameState::GAME_PLAY;
+                    }
+                }
+                else {
+                    play_btn_rectangle.setOutlineColor(sf::Color::Transparent);
+                }
+                    
+                if  (exit_btn_rectangle.getGlobalBounds().contains(mouseWorldPos)) {
+                    exit_btn_rectangle.setOutlineColor(sf::Color::Black);
+                    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+                        window.close();
+                    }
+                }
+                else {
+                    exit_btn_rectangle.setOutlineColor(sf::Color::Transparent);
+                }
 
-
-        
-        
-
-
-
-
-        move_snake();
-        window.draw(sh.shape);
-        sf::Vector2f snake_pos = sh.shape.getPosition();
-        if (!(snake_pos.x > 25 && snake_pos.x < 765) || !(snake_pos.y > 105 && snake_pos.y < 763)) game_over();
-  
-        
-        // do I move last tail?
-        TailVectorData& ultima = snake_tail_vec[ultima_value];
-        if (!ultima.active && snake_tail_vec.size() > 1) {
-            TailVectorData& penultima = snake_tail_vec[ultima_value-1];
-            float distance = distance_between_two_pos(penultima.shape.getPosition(), ultima.shape.getPosition()); // math oooooo
-            if (distance >= 44) {
-                ultima.active = true;
+                window.draw(play_text);
+                window.draw(exit_text);
+                break;
             }
+                
+                
+                
+                
         }
         
-
-        sh = snake_tail_vec[0];
-        // Collision detection
-        sf::Vector2f apple_location = get_current_tile(apple_sprite);
-        sf::Vector2f snake_location = get_current_tile(sh.shape);
-
-        if (apple_location == snake_location) {
-            TailVectorData& data = snake_tail_vec.back();
-            add_tail(data.shape);
-
-            rand_apple(apple_sprite); 
-            while (apple_is_on_snake(apple_sprite)) {
-                // if infinite loop game over
-                rand_apple(apple_sprite);
-            }
-
-
-            apples_eaten++;
-            
-
-        }
-
-        sf::Text text(aligatai_font);
-        text.setString(std::to_string(apples_eaten));
-        text.setCharacterSize(70); // in pixels, not points!
-        text.setFillColor(sf::Color::Black);
-        text.setPosition({ 80, -7 });
-        window.draw(text);
-
-
-        window.draw(apple_sprite);
-        
-
-
-        window.draw(task_bar_apple);
-
 
         // end the current frame
         window.display();
@@ -324,8 +445,13 @@ int main()
 
 
 
-/*function definitions*/
 
+
+
+
+
+
+/*function definitions*/
 
 bool apple_is_on_snake(sf::Sprite& the_apple_sprite) {
     TailVectorData& data = snake_tail_vec[0];
@@ -417,7 +543,8 @@ void move_snake() {
     
      data.every_position.push_back(the_snake_circle.getPosition());
 
-     if (data.every_position.size() > (25*17*55)+2) {
+     
+     if (data.every_position.size() > (25*17* movement_offset)+2) {
          data.every_position.pop_front();
          adjustment++;
      }
@@ -453,7 +580,7 @@ sf::Vector2f get_center_position_of_tile(int x_tile, int y_tile) { // I think th
 void add_tail(sf::CircleShape& last_tail) {
 
     sf::CircleShape new_snake_tail(20.f);
-    new_snake_tail.setFillColor(sf::Color::Red);
+    new_snake_tail.setFillColor(sf::Color::Blue);
 
     sf::Vector2f tail_pos = last_tail.getPosition();
     new_snake_tail.setPosition(tail_pos);
@@ -478,7 +605,7 @@ void move_tail(sf::CircleShape& current_tail, bool ready_to_move, int tail_itera
         return;
     }
 
-    int frame = frame_count - (55 * tail_iteration) - adjustment; // 55 is just for distancing bewteen tails
+    int frame = frame_count - (movement_offset * tail_iteration) - adjustment; // movement_offset is just for distancing bewteen tails
     if (frame > positions.every_position.size()) frame = positions.every_position.size()-1;
 
     current_tail.setPosition(positions.every_position[frame]);
@@ -495,7 +622,20 @@ float distance_between_two_pos(sf::Vector2f pos_one, sf::Vector2f pos_two) {
 }
 
 
+void setup_snake() {
+    /*Snake_head--Start*/
+    sf::CircleShape snake_head(20.f);
+    snake_head.setFillColor(sf::Color::Blue);
+    snake_head.setPosition({ -20 + 25 + 22 + (44 * (4 - 1)), -20 + 105 + 22 + (44 * (8 - 1)) });
 
-void game_over() {
-    std::cout << "Game Over" << "\n";
+    TailVectorData data;
+    data.shape = snake_head;
+    data.active = true;
+    snake_tail_vec.push_back(data);
+    /*Snake_head--End*/
+
+    //change amount for fun
+    for (int i = 0; i < 2;i++) {
+        add_tail(data.shape);
+    }
 }
