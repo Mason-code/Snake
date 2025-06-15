@@ -250,41 +250,6 @@ int main()
         // check all the window's events that were triggered since the last iteration of the loop
         while (const std::optional event = window.pollEvent())
         {
-            float ing_donuts = uni_speed;
-
-            /* 
-            
-            If you have a regular object, you use the dot '.' operator:
-            sf::Event event;
-            event.type; // access the 'type' member of the event object
-            
-            If you have a pointer to an object, you use the arrow '->' operator:
-            sf::Event* eventPtr = &event;
-            eventPtr->type; // access the 'type' member through the pointer
-            
-            */
-
-            if (const auto* key = event->getIf<sf::Event::KeyPressed>()) { //Check if the current event is a KeyPressed event. | If it is, get a pointer to the KeyPressed data and store it in 'key'.
-                
-                if (key->code == sf::Keyboard::Key::W && y_velocity != ing_donuts) {
-                    need_turn.push_back(sf::Vector2f(0.f,-ing_donuts));
-
-                }
-                if (key->code == sf::Keyboard::Key::A && x_velocity != ing_donuts) {
-                    need_turn.push_back(sf::Vector2f(-ing_donuts, 0.f));
-
-                }
-                if (key->code == sf::Keyboard::Key::S && y_velocity != -ing_donuts) {
-                    need_turn.push_back(sf::Vector2f(0.f, ing_donuts));
-
-                }
-                if (key->code == sf::Keyboard::Key::D && x_velocity != -ing_donuts) {
-                    need_turn.push_back(sf::Vector2f(ing_donuts, 0.f));
-                }
-                
-                
-            }
-
 
             // "close requested" event: we close the window
             if (event->is<sf::Event::Closed>())
@@ -498,6 +463,27 @@ sf::Sprite rand_apple(sf::Sprite& the_apple_sprite) {
 
 
 void move_snake() {
+
+    float ing_donuts = uni_speed;
+
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W) && y_velocity != ing_donuts) {
+        need_turn.push_back(sf::Vector2f(0.f, -ing_donuts));
+
+    }
+    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A) && x_velocity != ing_donuts) {
+        need_turn.push_back(sf::Vector2f(-ing_donuts, 0.f));
+
+    }
+    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S) && y_velocity != -ing_donuts) {
+        need_turn.push_back(sf::Vector2f(0.f, ing_donuts));
+
+    }
+    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D) && x_velocity != -ing_donuts) {
+        need_turn.push_back(sf::Vector2f(ing_donuts, 0.f));
+    }
+
+
+
 
     TailVectorData& data = snake_tail_vec[0];
     sf::CircleShape& the_snake_circle = data.shape;
