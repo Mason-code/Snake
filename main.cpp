@@ -79,6 +79,7 @@ void move_tail(sf::CircleShape& current_tail, bool ready_to_move, int tail_itera
 float distance_between_two_pos(sf::Vector2f pos_one, sf::Vector2f pos_two);
 bool apple_is_on_snake(sf::Sprite& the_apple_sprite);
 void setup_snake();
+sf::Color get_color();
 
 int main()
 {
@@ -199,7 +200,8 @@ int main()
     play_text.setCharacterSize(80); 
     play_text.setFillColor(sf::Color::White);
     play_text.setPosition({ (play_btn_rectangle.getPosition().x + play_btn_rectangle.getSize().x / 2.f) - 72, (play_btn_rectangle.getPosition().y + play_btn_rectangle.getSize().y / 2.f) - 60 });
-
+    play_text.setOutlineColor(sf::Color::Black);
+    play_text.setOutlineThickness(1.f);
 
     // Player Selection
     sf::RectangleShape player_slctn_btn_rectangle({ 390.f, 80.f });
@@ -213,7 +215,8 @@ int main()
     player_slctn_text.setCharacterSize(70); 
     player_slctn_text.setFillColor(sf::Color::White);
     player_slctn_text.setPosition(sf::Vector2f ((player_slctn_btn_rectangle.getPosition().x + player_slctn_btn_rectangle.getSize().x / 2.f) - 186, (player_slctn_btn_rectangle.getPosition().y + player_slctn_btn_rectangle.getSize().y / 2.f) - 55 ));
-
+    player_slctn_text.setOutlineColor(sf::Color::Black);
+    player_slctn_text.setOutlineThickness(1.f);
 
 
     // exit button
@@ -228,6 +231,8 @@ int main()
     exit_text.setCharacterSize(80); 
     exit_text.setFillColor(sf::Color::White);
     exit_text.setPosition({ (exit_btn_rectangle.getPosition().x + exit_btn_rectangle.getSize().x / 2.f) - 58,(exit_btn_rectangle.getPosition().y + exit_btn_rectangle.getSize().y / 2.f) - 60 });
+    exit_text.setOutlineColor(sf::Color::Black);
+    exit_text.setOutlineThickness(1.f);
 
 
     // blur background
@@ -312,6 +317,24 @@ int main()
     btm_right_text.setPosition(sf::Vector2f( btm_right_btn.getPosition().x + btm_right_btn.getSize().x / 2.f - 77, btm_right_btn.getPosition().y + btm_right_btn.getSize().y / 2.f - 35));
     btm_right_text.setOutlineThickness(1.f);
     btm_right_text.setOutlineColor(sf::Color::Transparent);
+
+
+
+    sf::RectangleShape back_btn({ 40.f, 90.f });
+    back_btn.setFillColor(sf::Color::Transparent);
+    back_btn.setPosition(sf::Vector2f((window.getSize().x / 2) - 215 - 10 - 5 - 30 - 20 + 28- 15-1-6+1, (window.getSize().y / 2) + 300 + 5 - 3 - 50 - 50+10));
+    back_btn.setOutlineThickness(8.f);
+    back_btn.setOutlineColor(sf::Color(74, 117, 44));
+
+    sf::Text back_text(aligatai_font);
+    back_text.setString("Back");
+    back_text.setFillColor(sf::Color::Black);
+    back_text.setCharacterSize(50);
+    back_text.setPosition(sf::Vector2f((window.getSize().x / 2) - 215 - 10 - 5 - 30-24-5, (window.getSize().y / 2) + 300+5 - 5));
+    back_text.setRotation(sf::degrees(270.f));
+
+
+
 
     /* PLAYER_SELECTION -- End */
 
@@ -401,12 +424,16 @@ int main()
 
                     if (tail.active && distance_between_two_pos(tail.shape.getPosition(), sh.shape.getPosition()) < 15) current_state = GameState::MAIN_MENU;
                     
+                    
+
                 }
                 move_snake();
                 window.draw(sh.shape);
                 sf::Vector2f snake_pos = sh.shape.getPosition();
                 if (!(snake_pos.x > 25 && snake_pos.x < 765) || !(snake_pos.y > 105 && snake_pos.y < 763)) current_state = GameState::MAIN_MENU; 
                 
+
+
                 // do I move last tail?
                 TailVectorData& ultima = snake_tail_vec[ultima_value];
                 if (!ultima.active && snake_tail_vec.size() > 1) {
@@ -416,6 +443,7 @@ int main()
                         ultima.active = true;
                     }
                 }
+
 
                 sh = snake_tail_vec[0];
                 // Collision detection
@@ -428,19 +456,31 @@ int main()
 
                     rand_apple(apple_sprite);
                     while (apple_is_on_snake(apple_sprite)) {
-                        // if infinite loop game over!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                        // if infinite loop game over!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                         rand_apple(apple_sprite);
                     }
+
+
                     apples_eaten++;
+
+
                 }
 
 
                 apple_text.setString(std::to_string(apples_eaten));
                 window.draw(apple_text);
+
+
                 window.draw(apple_sprite);
+
+
+
                 window.draw(task_bar_apple);
 
+
                 break;
+
+
             }
             case GameState::MAIN_MENU: {
                 window.draw(blur_sprite);
@@ -473,6 +513,7 @@ int main()
                         apple_sprite.setPosition({ -40 + 19.5 + (13 * 44), 70 + -25 + (8 * 44) });
 
                         setup_snake();
+                        //set color
                         current_state = GameState::GAME_PLAY;
                     }
                 }
@@ -501,6 +542,7 @@ int main()
                 
                 break;
             }
+
             case GameState::PLAYER_SELECTION: {
                 window.draw(blur_sprite);
                 window.draw(background_rectangle);
@@ -513,6 +555,21 @@ int main()
                 window.draw(top_right_text);
                 window.draw(btm_left_text);
                 window.draw(top_left_text);
+                window.draw(back_btn);
+                window.draw(back_text);
+
+                sf::Vector2i mousePixelPos = sf::Mouse::getPosition(window); // pixel coords
+                sf::Vector2f mouseWorldPos = window.mapPixelToCoords(mousePixelPos); // convert to world coords
+
+                if (back_btn.getGlobalBounds().contains(mouseWorldPos)) {
+                    back_btn.setFillColor(sf::Color(87, 138, 52));
+                    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+                        current_state = GameState::MAIN_MENU;
+                    }
+                }
+                else {
+                    back_btn.setFillColor(sf::Color::Transparent);
+                }
 
                 switch (current_color) {
                     case SnakeColor::BLINKY: {
@@ -529,10 +586,7 @@ int main()
                     }
                 }
 
-
-                sf::Vector2i mousePixelPos = sf::Mouse::getPosition(window); // pixel coords
-                sf::Vector2f mouseWorldPos = window.mapPixelToCoords(mousePixelPos); // convert to world coords
-
+                
                 // I pointerified it so the iteration actual affects the original objects
                 std::array<sf::Text*, 4> texts = { &btm_left_text, &btm_right_text, &top_left_text, &top_right_text };
                 std::array<sf::RectangleShape*, 4> buttons = { &btm_left_btn, &btm_right_btn, &top_left_btn, &top_right_btn };
@@ -546,10 +600,10 @@ int main()
                         if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
 
                             switch (i) {
-                                case 0: current_color = SnakeColor::BLINKY; break;
-                                case 1: current_color = SnakeColor::PINKY; break;
-                                case 2: current_color = SnakeColor::INKY; break;
-                                case 3: current_color = SnakeColor::CLYDE; break;
+                                case 0: current_color = SnakeColor::PINKY; break;
+                                case 1: current_color = SnakeColor::CLYDE; break;
+                                case 2: current_color = SnakeColor::BLINKY; break;
+                                case 3: current_color = SnakeColor::INKY; break;
                             }
 
                             for (int b = 0; b < 4; b++) {
@@ -557,7 +611,6 @@ int main()
                                 texts[b]->setOutlineColor(sf::Color::Transparent);
                                 buttons[b]->setOutlineColor(sf::Color::Transparent);
                                 buttons[b]->setOutlineThickness(1.f);
-                                std::cout << 1 << "\n";
                             }
 
                             texts[i]->setOutlineColor(sf::Color::Black);
@@ -718,7 +771,9 @@ sf::Vector2f get_center_position_of_tile(int x_tile, int y_tile) { // I think th
 void add_tail(sf::CircleShape& last_tail) {
 
     sf::CircleShape new_snake_tail(20.f);
-    new_snake_tail.setFillColor(sf::Color::Blue);
+    new_snake_tail.setFillColor(get_color());
+    new_snake_tail.setOutlineColor(sf::Color::Black);
+    new_snake_tail.setOutlineThickness(1.f);
 
     sf::Vector2f tail_pos = last_tail.getPosition();
     new_snake_tail.setPosition(tail_pos);
@@ -763,8 +818,10 @@ float distance_between_two_pos(sf::Vector2f pos_one, sf::Vector2f pos_two) {
 void setup_snake() {
     /*Snake_head--Start*/
     sf::CircleShape snake_head(20.f);
-    snake_head.setFillColor(sf::Color::Blue);
+    snake_head.setFillColor(get_color());
     snake_head.setPosition({ -20 + 25 + 22 + (44 * (4 - 1)), -20 + 105 + 22 + (44 * (8 - 1)) });
+    snake_head.setOutlineColor(sf::Color::Black);
+    snake_head.setOutlineThickness(1.f);
 
     TailVectorData data;
     data.shape = snake_head;
@@ -776,4 +833,14 @@ void setup_snake() {
     for (int i = 0; i < 2;i++) {
         add_tail(data.shape);
     }
+}
+
+sf::Color get_color() {
+    switch (current_color) {
+        case SnakeColor::BLINKY: return sf::Color(233, 28, 29);
+        case SnakeColor::PINKY: return sf::Color(234, 90, 151);
+        case SnakeColor::INKY: return sf::Color(109, 203, 220);
+        case SnakeColor::CLYDE: return sf::Color(247, 122, 24);
+    }
+    
 }
