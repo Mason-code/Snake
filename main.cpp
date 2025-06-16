@@ -401,16 +401,12 @@ int main()
 
                     if (tail.active && distance_between_two_pos(tail.shape.getPosition(), sh.shape.getPosition()) < 15) current_state = GameState::MAIN_MENU;
                     
-                    
-
                 }
                 move_snake();
                 window.draw(sh.shape);
                 sf::Vector2f snake_pos = sh.shape.getPosition();
                 if (!(snake_pos.x > 25 && snake_pos.x < 765) || !(snake_pos.y > 105 && snake_pos.y < 763)) current_state = GameState::MAIN_MENU; 
                 
-
-
                 // do I move last tail?
                 TailVectorData& ultima = snake_tail_vec[ultima_value];
                 if (!ultima.active && snake_tail_vec.size() > 1) {
@@ -420,7 +416,6 @@ int main()
                         ultima.active = true;
                     }
                 }
-
 
                 sh = snake_tail_vec[0];
                 // Collision detection
@@ -433,31 +428,19 @@ int main()
 
                     rand_apple(apple_sprite);
                     while (apple_is_on_snake(apple_sprite)) {
-                        // if infinite loop game over
+                        // if infinite loop game over!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                         rand_apple(apple_sprite);
                     }
-
-
                     apples_eaten++;
-
-
                 }
 
 
                 apple_text.setString(std::to_string(apples_eaten));
                 window.draw(apple_text);
-
-
                 window.draw(apple_sprite);
-
-
-
                 window.draw(task_bar_apple);
 
-
                 break;
-
-
             }
             case GameState::MAIN_MENU: {
                 window.draw(blur_sprite);
@@ -518,7 +501,6 @@ int main()
                 
                 break;
             }
-
             case GameState::PLAYER_SELECTION: {
                 window.draw(blur_sprite);
                 window.draw(background_rectangle);
