@@ -26,9 +26,17 @@ multi que movement strat.
 enum class GameState {
     MAIN_MENU,
     GAME_PLAY,
-    GAME_OVER
+    GAME_OVER,
+    PLAYER_SELECTION
 };
-GameState currentState = GameState::MAIN_MENU;
+enum class SnakeColor {
+    PINKY,
+    INKY,
+    BLINKY,
+    CLYDE
+};
+GameState current_state = GameState::MAIN_MENU;
+SnakeColor current_color = SnakeColor::BLINKY;
 
 //global
 int adjustment = 0;
@@ -153,7 +161,7 @@ int main()
 
     sf::Font aligatai_font("Aligatai_YzzL.ttf");
     sf::Text apple_text(aligatai_font);
-    apple_text.setCharacterSize(70); // in pixels, not points!
+    apple_text.setCharacterSize(70); 
     apple_text.setFillColor(sf::Color::White);
     apple_text.setPosition({ 79, -9 });
     /*TaskBar_AppleCount--End*/
@@ -175,7 +183,7 @@ int main()
     // Highsccore window sf::Color(77,193,249)
     sf::RectangleShape hs_win_rectangle({ 390.f, 300.f });
     hs_win_rectangle.setFillColor(sf::Color(77, 193, 249));
-    hs_win_rectangle.setPosition(sf::Vector2f((window.getSize().x / 2) - 195, background_rectangle.getPosition().y + 30));
+    hs_win_rectangle.setPosition(sf::Vector2f((window.getSize().x / 2) - 195, background_rectangle.getPosition().y + 12));
     hs_win_rectangle.setOutlineColor(sf::Color(87, 138, 52));
     hs_win_rectangle.setOutlineThickness(5.f);
 
@@ -188,54 +196,124 @@ int main()
 
     sf::Text play_text(aligatai_font);
     play_text.setString("Start!");
-    play_text.setCharacterSize(80); // in pixels, not points!
+    play_text.setCharacterSize(80); 
     play_text.setFillColor(sf::Color::White);
-    play_text.setPosition({ (play_btn_rectangle.getPosition().x + play_btn_rectangle.getSize().x / 2.f) - 72,
-    (play_btn_rectangle.getPosition().y + play_btn_rectangle.getSize().y / 2.f) - 60 });
+    play_text.setPosition({ (play_btn_rectangle.getPosition().x + play_btn_rectangle.getSize().x / 2.f) - 72, (play_btn_rectangle.getPosition().y + play_btn_rectangle.getSize().y / 2.f) - 60 });
+
+
+    // Player Selection
+    sf::RectangleShape player_slctn_btn_rectangle({ 390.f, 80.f });
+    player_slctn_btn_rectangle.setFillColor(sf::Color(87, 138, 52));
+    player_slctn_btn_rectangle.setPosition(sf::Vector2f(play_btn_rectangle.getPosition().x, play_btn_rectangle.getPosition().y + play_btn_rectangle.getSize().y + 10 ));
+    player_slctn_btn_rectangle.setOutlineThickness(3.f);
+    player_slctn_btn_rectangle.setOutlineColor(sf::Color::Transparent);
+
+    sf::Text player_slctn_text(aligatai_font);
+    player_slctn_text.setString("Player Selection");
+    player_slctn_text.setCharacterSize(70); 
+    player_slctn_text.setFillColor(sf::Color::White);
+    player_slctn_text.setPosition(sf::Vector2f ((player_slctn_btn_rectangle.getPosition().x + player_slctn_btn_rectangle.getSize().x / 2.f) - 186, (player_slctn_btn_rectangle.getPosition().y + player_slctn_btn_rectangle.getSize().y / 2.f) - 55 ));
+
+
 
     // exit button
     sf::RectangleShape exit_btn_rectangle({ 390.f, 80.f });
     exit_btn_rectangle.setFillColor(sf::Color(87, 138, 52));
-    exit_btn_rectangle.setPosition(sf::Vector2f(play_btn_rectangle.getPosition().x, play_btn_rectangle.getPosition().y + play_btn_rectangle.getSize().y + 20));
+    exit_btn_rectangle.setPosition(sf::Vector2f(play_btn_rectangle.getPosition().x, play_btn_rectangle.getPosition().y + play_btn_rectangle.getSize().y + 100));
     exit_btn_rectangle.setOutlineThickness(3.f);
     exit_btn_rectangle.setOutlineColor(sf::Color::Transparent);
 
-
     sf::Text exit_text(aligatai_font);
     exit_text.setString("Exit");
-    exit_text.setCharacterSize(80); // in pixels, not points!
+    exit_text.setCharacterSize(80); 
     exit_text.setFillColor(sf::Color::White);
-    exit_text.setPosition({ (exit_btn_rectangle.getPosition().x + exit_btn_rectangle.getSize().x / 2.f) - 58,
-    (exit_btn_rectangle.getPosition().y + exit_btn_rectangle.getSize().y / 2.f) - 60 });
+    exit_text.setPosition({ (exit_btn_rectangle.getPosition().x + exit_btn_rectangle.getSize().x / 2.f) - 58,(exit_btn_rectangle.getPosition().y + exit_btn_rectangle.getSize().y / 2.f) - 60 });
+
 
     // blur background
     sf::Texture blur_texture;
     if (!blur_texture.loadFromFile("blur.jpg")) {
         return -1;
     }
-
     sf::Sprite blur_sprite(blur_texture);
-
     // Desired size
     float target_width = 800;
     float target_height = 800;
-
     // Get original size of the image
     sf::Vector2u textureSize = blur_texture.getSize();
-
     // Calculate scale factors
     scale_x = target_width / texture_size.x;
     scale_y = target_height / texture_size.y;
-
     // Apply scale
     blur_sprite.setScale({ scale_x, scale_y });
     blur_sprite.setPosition(sf::Vector2f(0, 0));
     blur_sprite.setColor(sf::Color(255, 255, 255, 155)); 
 
-
     /*Main Menu--End*/
 
 
+    /* PLAYER_SELECTION --Start*/
+
+    sf::RectangleShape top_left_btn({ 188.f, 122.f });
+    top_left_btn.setFillColor(sf::Color(87, 138, 52));
+    top_left_btn.setPosition(sf::Vector2f(hs_win_rectangle.getPosition().x, 
+        hs_win_rectangle.getPosition().y + hs_win_rectangle.getSize().y + 20));
+    top_left_btn.setOutlineThickness(3.f);
+    top_left_btn.setOutlineColor(sf::Color::Black);
+
+    sf::Text top_left_text(aligatai_font);
+    top_left_text.setString("BLINKY");
+    top_left_text.setCharacterSize(52); 
+    top_left_text.setFillColor(sf::Color(233, 28, 29));
+    top_left_text.setPosition( sf::Vector2f( top_left_btn.getPosition().x + top_left_btn.getSize().x / 2.f - 90, top_left_btn.getPosition().y + top_left_btn.getSize().y / 2.f - 35));
+    top_left_text.setOutlineThickness(1.f);
+    top_left_text.setOutlineColor(sf::Color::Black);
+
+
+    sf::RectangleShape btm_left_btn({ 188.f, 122.f });
+    btm_left_btn.setFillColor(sf::Color(87, 138, 52));
+    btm_left_btn.setPosition(sf::Vector2f(play_btn_rectangle.getPosition().x, play_btn_rectangle.getPosition().y + play_btn_rectangle.getSize().y + 55));
+    btm_left_btn.setOutlineThickness(1.f);
+    btm_left_btn.setOutlineColor(sf::Color::Transparent);
+
+    sf::Text btm_left_text(aligatai_font);
+    btm_left_text.setString("PINKY");
+    btm_left_text.setCharacterSize(52);
+    btm_left_text.setFillColor(sf::Color(234, 90, 151));
+    btm_left_text.setPosition(sf::Vector2f(btm_left_btn.getPosition().x + btm_left_btn.getSize().x / 2.f - 77, btm_left_btn.getPosition().y + btm_left_btn.getSize().y / 2.f -35));
+    btm_left_text.setOutlineThickness(1.f);
+    btm_left_text.setOutlineColor(sf::Color::Transparent);
+
+    sf::RectangleShape top_right_btn({ 188.f, 122.f });
+    top_right_btn.setFillColor(sf::Color(87, 138, 52));
+    top_right_btn.setPosition(sf::Vector2f(hs_win_rectangle.getPosition().x + 188 + 14, hs_win_rectangle.getPosition().y + hs_win_rectangle.getSize().y + 20));
+    top_right_btn.setOutlineThickness(1.f);
+    top_right_btn.setOutlineColor(sf::Color::Transparent);
+
+    sf::Text top_right_text(aligatai_font);
+    top_right_text.setString("INKY");
+    top_right_text.setCharacterSize(52);
+    top_right_text.setFillColor(sf::Color(109, 203, 220));
+    top_right_text.setPosition(sf::Vector2f(top_right_btn.getPosition().x + top_right_btn.getSize().x / 2.f - 62, top_right_btn.getPosition().y + top_right_btn.getSize().y / 2.f - 35));
+    top_right_text.setOutlineThickness(1.f);
+    top_right_text.setOutlineColor(sf::Color::Transparent);
+
+    sf::RectangleShape btm_right_btn({ 188.f, 122.f });
+    btm_right_btn.setFillColor(sf::Color(87, 138, 52));
+    btm_right_btn.setPosition(sf::Vector2f(play_btn_rectangle.getPosition().x + 188 + 14, play_btn_rectangle.getPosition().y + play_btn_rectangle.getSize().y + 55));
+    btm_right_btn.setOutlineThickness(1.f);
+    btm_right_btn.setOutlineColor(sf::Color::Transparent);
+
+
+    sf::Text btm_right_text(aligatai_font);
+    btm_right_text.setString("CLYDE");
+    btm_right_text.setCharacterSize(52);
+    btm_right_text.setFillColor(sf::Color(247, 122, 24));
+    btm_right_text.setPosition(sf::Vector2f( btm_right_btn.getPosition().x + btm_right_btn.getSize().x / 2.f - 77, btm_right_btn.getPosition().y + btm_right_btn.getSize().y / 2.f - 35));
+    btm_right_text.setOutlineThickness(1.f);
+    btm_right_text.setOutlineColor(sf::Color::Transparent);
+
+    /* PLAYER_SELECTION -- End */
 
 
 
@@ -303,7 +381,7 @@ int main()
         }
 
 
-        switch (currentState) {
+        switch (current_state) {
             case GameState::GAME_PLAY: {
                 
                 TailVectorData& sh = snake_tail_vec[0];
@@ -321,7 +399,7 @@ int main()
                     window.draw(tail.shape);
                     iteration_value++;
 
-                    if (tail.active && distance_between_two_pos(tail.shape.getPosition(), sh.shape.getPosition()) < 15) currentState = GameState::MAIN_MENU;
+                    if (tail.active && distance_between_two_pos(tail.shape.getPosition(), sh.shape.getPosition()) < 15) current_state = GameState::MAIN_MENU;
                     
                     
 
@@ -329,7 +407,7 @@ int main()
                 move_snake();
                 window.draw(sh.shape);
                 sf::Vector2f snake_pos = sh.shape.getPosition();
-                if (!(snake_pos.x > 25 && snake_pos.x < 765) || !(snake_pos.y > 105 && snake_pos.y < 763)) currentState = GameState::MAIN_MENU; 
+                if (!(snake_pos.x > 25 && snake_pos.x < 765) || !(snake_pos.y > 105 && snake_pos.y < 763)) current_state = GameState::MAIN_MENU; 
                 
 
 
@@ -387,8 +465,14 @@ int main()
                 window.draw(exit_btn_rectangle);
                 window.draw(play_btn_rectangle);
                 window.draw(hs_win_rectangle);
+                window.draw(player_slctn_btn_rectangle);
+                window.draw(play_text);
+                window.draw(player_slctn_text);
+                window.draw(exit_text);
+
                 play_btn_rectangle.setOutlineColor(sf::Color::Transparent);
                 exit_btn_rectangle.setOutlineColor(sf::Color::Transparent);
+                player_slctn_btn_rectangle.setOutlineColor(sf::Color::Transparent);
 
                 sf::Vector2i mousePixelPos = sf::Mouse::getPosition(window); // pixel coords
                 sf::Vector2f mouseWorldPos = window.mapPixelToCoords(mousePixelPos); // convert to world coords
@@ -396,23 +480,31 @@ int main()
                     play_btn_rectangle.setOutlineColor(sf::Color::Black);
                     if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {                        
                         //reset game values
-                        adjustment = 0;
                         need_turn = {};
                         x_velocity = 0;
                         y_velocity = 0;
                         snake_tail_vec = {};
                         apples_eaten = 0;
                         frame_count = 0;
+                        adjustment = 0;
                         apple_sprite.setPosition({ -40 + 19.5 + (13 * 44), 70 + -25 + (8 * 44) });
 
                         setup_snake();
-                        currentState = GameState::GAME_PLAY;
+                        current_state = GameState::GAME_PLAY;
                     }
                 }
                 else {
                     play_btn_rectangle.setOutlineColor(sf::Color::Transparent);
                 }
-                    
+                if (player_slctn_btn_rectangle.getGlobalBounds().contains(mouseWorldPos)) {
+                    player_slctn_btn_rectangle.setOutlineColor(sf::Color::Black);
+                    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+                        current_state = GameState::PLAYER_SELECTION;
+                    }
+                }
+                else {
+                    player_slctn_btn_rectangle.setOutlineColor(sf::Color::Transparent);
+                }
                 if  (exit_btn_rectangle.getGlobalBounds().contains(mouseWorldPos)) {
                     exit_btn_rectangle.setOutlineColor(sf::Color::Black);
                     if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
@@ -423,14 +515,81 @@ int main()
                     exit_btn_rectangle.setOutlineColor(sf::Color::Transparent);
                 }
 
-                window.draw(play_text);
-                window.draw(exit_text);
+                
                 break;
             }
-                
-                
-                
-                
+
+            case GameState::PLAYER_SELECTION: {
+                window.draw(blur_sprite);
+                window.draw(background_rectangle);
+                window.draw(hs_win_rectangle);
+                window.draw(btm_left_btn);
+                window.draw(top_left_btn);
+                window.draw(top_right_btn);
+                window.draw(btm_right_btn);
+                window.draw(btm_right_text);
+                window.draw(top_right_text);
+                window.draw(btm_left_text);
+                window.draw(top_left_text);
+
+                switch (current_color) {
+                    case SnakeColor::BLINKY: {
+                        //display stuff on hs_win_rectangle
+                    }
+                    case SnakeColor::PINKY: {
+
+                    }
+                    case SnakeColor::INKY: {
+
+                    }
+                    case SnakeColor::CLYDE: {
+
+                    }
+                }
+
+
+                sf::Vector2i mousePixelPos = sf::Mouse::getPosition(window); // pixel coords
+                sf::Vector2f mouseWorldPos = window.mapPixelToCoords(mousePixelPos); // convert to world coords
+
+                // I pointerified it so the iteration actual affects the original objects
+                std::array<sf::Text*, 4> texts = { &btm_left_text, &btm_right_text, &top_left_text, &top_right_text };
+                std::array<sf::RectangleShape*, 4> buttons = { &btm_left_btn, &btm_right_btn, &top_left_btn, &top_right_btn };
+
+
+                //more pointerfying: If you have a pointer to an object, you use '->' to access its members (like functions or variables), instead of '.' which is used for regular non-pointer objects. A '->' is a member access operator 
+                // imagine if all the '->' were replaced with the '.' , its not that complicated - just another operator that does almost the same thing
+                for (int i = 0; i < 4; i++) {
+                    if (buttons[i]->getGlobalBounds().contains(mouseWorldPos) && texts[i]->getOutlineColor() != sf::Color::Black) {
+                        buttons[i]->setOutlineColor(sf::Color::Black);
+                        if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+
+                            switch (i) {
+                                case 0: current_color = SnakeColor::BLINKY; break;
+                                case 1: current_color = SnakeColor::PINKY; break;
+                                case 2: current_color = SnakeColor::INKY; break;
+                                case 3: current_color = SnakeColor::CLYDE; break;
+                            }
+
+                            for (int b = 0; b < 4; b++) {
+                                if (i == b) continue;
+                                texts[b]->setOutlineColor(sf::Color::Transparent);
+                                buttons[b]->setOutlineColor(sf::Color::Transparent);
+                                buttons[b]->setOutlineThickness(1.f);
+                                std::cout << 1 << "\n";
+                            }
+
+                            texts[i]->setOutlineColor(sf::Color::Black);
+                            buttons[i]->setOutlineColor(sf::Color::Black);
+                            buttons[i]->setOutlineThickness(3.f);
+                            
+                        }
+                    }
+                    else if (texts[i]->getOutlineColor() != sf::Color::Black) {
+                        buttons[i]->setOutlineColor(sf::Color::Transparent);
+                    }
+                }
+                break;
+            }
         }
         
 
@@ -495,10 +654,7 @@ sf::Sprite rand_apple(sf::Sprite& the_apple_sprite) {
 
 
 void move_snake() {
-
    
-
-
     TailVectorData& data = snake_tail_vec[0];
     sf::CircleShape& the_snake_circle = data.shape;
 
