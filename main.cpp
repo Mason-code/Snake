@@ -18,9 +18,14 @@ multi que movement strat.
 #include <cmath>
 #include <deque>
 
+#include <string>
+#include <fstream>
+#include <sstream>
+#include <algorithm>
+
+
 //#include <imgui.h>
 //#include <imgui-SFML.h>
-
 
 
 enum class GameState {
@@ -37,6 +42,15 @@ enum class SnakeColor {
 };
 GameState current_state = GameState::MAIN_MENU;
 SnakeColor current_color = SnakeColor::BLINKY;
+
+
+struct ScoreBoard {
+    std::string which_snake;
+    int score;
+};
+
+std::vector<ScoreBoard> score_board_vector;
+
 
 //global
 int adjustment = 0;
@@ -138,9 +152,6 @@ int main()
     apple_sprite.setScale({ scale_x, scale_y });
     /*Apple--End*/
 
-
-
-
     /*TaskBar_AppleCount--Start*/
     sf::Texture apple_texture_two;
     if (!apple_texture_two.loadFromFile("apple.png")) {
@@ -159,7 +170,6 @@ int main()
     task_bar_apple.setScale({ scale_x_two, scale_y_two });
 
 
-
     sf::Font aligatai_font("Aligatai_YzzL.ttf");
     sf::Text apple_text(aligatai_font);
     apple_text.setCharacterSize(70); 
@@ -167,11 +177,6 @@ int main()
     apple_text.setPosition({ 79, -9 });
     /*TaskBar_AppleCount--End*/
     
-
-
-
-
-
     /*Main Menu--Start*/
 
     // menu window
@@ -181,7 +186,7 @@ int main()
     background_rectangle.setOutlineColor(sf::Color(74, 117, 44));
     background_rectangle.setOutlineThickness(10.f);
 
-    // Highsccore window sf::Color(77,193,249)
+    // Highsccore window 
     sf::RectangleShape hs_win_rectangle({ 390.f, 300.f });
     hs_win_rectangle.setFillColor(sf::Color(77, 193, 249));
     hs_win_rectangle.setPosition(sf::Vector2f((window.getSize().x / 2) - 195, background_rectangle.getPosition().y + 12));
@@ -258,6 +263,57 @@ int main()
 
 
     /* PLAYER_SELECTION --Start*/
+    sf::Vector2f snake_images_size = { 390.f, 200.f };
+
+    sf::Texture inky_texture;
+    if (!inky_texture.loadFromFile("INKY.png")) {
+        return -1; // Error loading file
+    }
+    inky_texture.setSmooth(true);
+    sf::Sprite inky_image(inky_texture);
+    texture_size = inky_texture.getSize();
+    // Calculate the scale factors
+    scale_x = snake_images_size.x / texture_size.x;
+    scale_y = snake_images_size.y / texture_size.y;
+    inky_image.setScale({ scale_x, scale_y });
+    inky_image.setPosition(sf::Vector2f((window.getSize().x / 2) - 195, background_rectangle.getPosition().y + 112));
+
+    sf::Texture pinky_texture;
+    if (!pinky_texture.loadFromFile("PINKY.png")) return -1; // Error loading file
+    pinky_texture.setSmooth(true);
+    sf::Sprite pinky_image(pinky_texture);
+    texture_size = pinky_texture.getSize();
+    // Calculate the scale factors
+    scale_x = snake_images_size.x / texture_size.x;
+    scale_y = snake_images_size.y / texture_size.y;
+    pinky_image.setScale({ scale_x, scale_y });
+    pinky_image.setPosition(sf::Vector2f((window.getSize().x / 2) - 195, background_rectangle.getPosition().y + 112));
+
+    sf::Texture blinky_texture;
+    if (!blinky_texture.loadFromFile("BLINKY.png")) return -1; // Error loading file
+    blinky_texture.setSmooth(true);
+    sf::Sprite blinky_image(blinky_texture);
+    texture_size = blinky_texture.getSize();
+    // Calculate the scale factors
+    scale_x = snake_images_size.x / texture_size.x;
+    scale_y = snake_images_size.y / texture_size.y;
+    blinky_image.setScale({ scale_x, scale_y });
+    blinky_image.setPosition(sf::Vector2f((window.getSize().x / 2) - 195, background_rectangle.getPosition().y + 112));
+
+    sf::Texture clyde_texture;
+    if (!clyde_texture.loadFromFile("CLYDE.png")) return -1; // Error loading file
+    clyde_texture.setSmooth(true);
+    sf::Sprite clyde_image(clyde_texture);
+    texture_size = clyde_texture.getSize();
+    // Calculate the scale factors
+    scale_x = snake_images_size.x / texture_size.x;
+    scale_y = snake_images_size.y / texture_size.y;
+    clyde_image.setScale({ scale_x, scale_y });
+    clyde_image.setPosition(sf::Vector2f((window.getSize().x / 2) - 195, background_rectangle.getPosition().y + 112));
+
+
+
+
 
     sf::RectangleShape top_left_btn({ 188.f, 122.f });
     top_left_btn.setFillColor(sf::Color(87, 138, 52));
@@ -333,14 +389,58 @@ int main()
     back_text.setPosition(sf::Vector2f((window.getSize().x / 2) - 215 - 10 - 5 - 30-24-5, (window.getSize().y / 2) + 300+5 - 5));
     back_text.setRotation(sf::degrees(270.f));
 
-
-
-
     /* PLAYER_SELECTION -- End */
 
 
 
-    
+    /* Game Over */
+
+    sf::Font minecraftia_font("Minecraftia_Regular.ttf");
+
+    sf::Text you_died_text(minecraftia_font);
+    you_died_text.setCharacterSize(71);
+    you_died_text.setFillColor(sf::Color(242, 241, 244));
+    you_died_text.setPosition(sf::Vector2f((window.getSize().x / 2) - 186, (window.getSize().y / 2) -170));
+    you_died_text.setString("You Died!");
+    sf::Text you_died_text_shadow(minecraftia_font);
+    you_died_text_shadow.setCharacterSize(71);
+    you_died_text_shadow.setFillColor(sf::Color(110, 105, 110));
+    you_died_text_shadow.setPosition(sf::Vector2f((window.getSize().x / 2) - 186 + 9, (window.getSize().y / 2) - 170 + 9));
+    you_died_text_shadow.setString("You Died!");
+
+    sf::Text score_text(minecraftia_font);
+    score_text.setCharacterSize(37);
+    score_text.setFillColor(sf::Color(242, 241, 244));
+    score_text.setPosition(sf::Vector2f((window.getSize().x / 2) + -93, (window.getSize().y / 2) -22));
+    sf::Text score_text_shadow(minecraftia_font);
+    score_text_shadow.setCharacterSize(37);
+    score_text_shadow.setFillColor(sf::Color(110, 105, 110));
+    score_text_shadow.setPosition(sf::Vector2f((window.getSize().x / 2) + -93 + 5, (window.getSize().y / 2) - 22 + 5));
+
+
+    sf::RectangleShape red_screen({ 800.f, 800.f });
+    red_screen.setFillColor(sf::Color(255, 0, 50, 130));
+    red_screen.setPosition({ 0, 0 });
+
+    sf::Texture respawn_texture;
+    if (!respawn_texture.loadFromFile("respawn_btn.png")) return -1; // Error loading file
+    respawn_texture.setSmooth(true);
+    sf::Sprite respawn_btn(respawn_texture);
+    respawn_btn.setScale(sf::Vector2f( .45, .45 ));
+    respawn_btn.setPosition(sf::Vector2f((window.getSize().x / 2) + -289, (window.getSize().y / 2) + 56));
+
+
+    sf::Texture title_screen_texture;
+    if (!title_screen_texture.loadFromFile("title_screen_btn.png")) return -1; // Error loading file
+    title_screen_texture.setSmooth(true);
+    sf::Sprite title_screen_btn(title_screen_texture);
+    title_screen_btn.setScale(sf::Vector2f(.45, .45));
+    title_screen_btn.setPosition(sf::Vector2f((window.getSize().x / 2) + -289, (window.getSize().y / 2) + 84));
+
+    /* Game Over -- End */
+
+
+
     // run the program as long as the window is open
     while (window.isOpen())
     {
@@ -379,8 +479,6 @@ int main()
                 if (key->code == sf::Keyboard::Key::D && x_velocity != -ing_donuts) {
                     need_turn.push_back(sf::Vector2f(ing_donuts, 0.f));
                 }
-
-
             }
 
             // "close requested" event: we close the window
@@ -422,7 +520,7 @@ int main()
                     window.draw(tail.shape);
                     iteration_value++;
 
-                    if (tail.active && distance_between_two_pos(tail.shape.getPosition(), sh.shape.getPosition()) < 15) current_state = GameState::MAIN_MENU;
+                    if (tail.active && distance_between_two_pos(tail.shape.getPosition(), sh.shape.getPosition()) < 15) current_state = GameState::GAME_OVER;
                     
                     
 
@@ -430,7 +528,7 @@ int main()
                 move_snake();
                 window.draw(sh.shape);
                 sf::Vector2f snake_pos = sh.shape.getPosition();
-                if (!(snake_pos.x > 25 && snake_pos.x < 765) || !(snake_pos.y > 105 && snake_pos.y < 763)) current_state = GameState::MAIN_MENU; 
+                if (!(snake_pos.x > 25 && snake_pos.x < 765) || !(snake_pos.y > 105 && snake_pos.y < 763)) current_state = GameState::GAME_OVER; 
                 
 
 
@@ -542,7 +640,6 @@ int main()
                 
                 break;
             }
-
             case GameState::PLAYER_SELECTION: {
                 window.draw(blur_sprite);
                 window.draw(background_rectangle);
@@ -570,22 +667,6 @@ int main()
                 else {
                     back_btn.setFillColor(sf::Color::Transparent);
                 }
-
-                switch (current_color) {
-                    case SnakeColor::BLINKY: {
-                        //display stuff on hs_win_rectangle
-                    }
-                    case SnakeColor::PINKY: {
-
-                    }
-                    case SnakeColor::INKY: {
-
-                    }
-                    case SnakeColor::CLYDE: {
-
-                    }
-                }
-
                 
                 // I pointerified it so the iteration actual affects the original objects
                 std::array<sf::Text*, 4> texts = { &btm_left_text, &btm_right_text, &top_left_text, &top_right_text };
@@ -623,7 +704,34 @@ int main()
                         buttons[i]->setOutlineColor(sf::Color::Transparent);
                     }
                 }
+
+                switch (current_color) {
+                    case SnakeColor::BLINKY: window.draw(blinky_image); break;
+                    case SnakeColor::PINKY: window.draw(pinky_image); break;
+                    case SnakeColor::INKY: window.draw(inky_image); break;
+                    case SnakeColor::CLYDE: window.draw(clyde_image); break;
+                }
                 break;
+            }
+            case GameState::GAME_OVER: {
+                window.draw(red_screen);
+                
+                window.draw(you_died_text_shadow);
+                window.draw(you_died_text);
+                
+                score_text.setString("Score: " + std::to_string(apples_eaten));
+                score_text_shadow.setString("Score: " + std::to_string(apples_eaten));
+                window.draw(score_text_shadow);
+                window.draw(score_text);
+
+
+
+                // save data for scoreboard
+
+                window.draw(title_screen_btn);
+                window.draw(respawn_btn);
+
+
             }
         }
         
@@ -636,14 +744,7 @@ int main()
 
 
 
-
-
-
-
-
-
 /*function definitions*/
-
 bool apple_is_on_snake(sf::Sprite& the_apple_sprite) {
     TailVectorData& data = snake_tail_vec[0];
     for (auto& pos : data.every_position) { // sorry if this is disgusting
@@ -655,7 +756,6 @@ bool apple_is_on_snake(sf::Sprite& the_apple_sprite) {
 
     return false;
 }
-
 
 sf::Sprite rand_apple(sf::Sprite& the_apple_sprite) {
    /* fancy  random */
@@ -685,8 +785,6 @@ sf::Sprite rand_apple(sf::Sprite& the_apple_sprite) {
     
     return the_apple_sprite;
 }
-
-
 
 void move_snake() {
    
@@ -741,8 +839,6 @@ void move_snake() {
      }
 
     }
-    
-
 
 sf::Vector2f get_current_tile(sf::Transformable& item) { // I can pass any object derived from sf::Transformable (like sf::Sprite, sf::CircleShape, sf::RectangleShape, etc.)
 
@@ -757,7 +853,6 @@ sf::Vector2f get_current_tile(sf::Transformable& item) { // I can pass any objec
     return sf::Vector2f(x_tile, y_tile);
 }
 
-
 sf::Vector2f get_center_position_of_tile(int x_tile, int y_tile) { // I think this is incorrect
 
     int x_pos = 25 + 22 + (44 * (x_tile - 1));
@@ -766,8 +861,6 @@ sf::Vector2f get_center_position_of_tile(int x_tile, int y_tile) { // I think th
     return sf::Vector2f(x_pos, y_pos);
 }
 
-
-//only for staarting amount
 void add_tail(sf::CircleShape& last_tail) {
 
     sf::CircleShape new_snake_tail(20.f);
@@ -778,33 +871,25 @@ void add_tail(sf::CircleShape& last_tail) {
     sf::Vector2f tail_pos = last_tail.getPosition();
     new_snake_tail.setPosition(tail_pos);
 
-
     TailVectorData data;
     data.shape = new_snake_tail;
-    
     data.active = false;
 
     snake_tail_vec.push_back(data);
-
-
 }
-
 
 void move_tail(sf::CircleShape& current_tail, bool ready_to_move, int tail_iteration) {
 
     TailVectorData& positions = snake_tail_vec[0];
 
-    if (!ready_to_move){ // clealry he was not ready to move -> thats why error
+    if (!ready_to_move){ 
         return;
     }
-
     int frame = frame_count - (movement_offset * tail_iteration) - adjustment; // movement_offset is just for distancing bewteen tails
     if (frame > positions.every_position.size()) frame = positions.every_position.size()-1;
 
     current_tail.setPosition(positions.every_position[frame]);
-
 }
-
 
 float distance_between_two_pos(sf::Vector2f pos_one, sf::Vector2f pos_two) {
     // there is a formula for this
@@ -813,7 +898,6 @@ float distance_between_two_pos(sf::Vector2f pos_one, sf::Vector2f pos_two) {
     float distance = std::sqrt(dx * dx + dy * dy); 
     return distance;
 }
-
 
 void setup_snake() {
     /*Snake_head--Start*/
