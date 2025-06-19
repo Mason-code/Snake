@@ -44,13 +44,6 @@ GameState current_state = GameState::MAIN_MENU;
 SnakeColor current_color = SnakeColor::BLINKY;
 
 
-struct ScoreBoard {
-    std::string which_snake;
-    int score;
-};
-
-std::vector<ScoreBoard> score_board_vector;
-
 
 //global
 int adjustment = 0;
@@ -178,6 +171,24 @@ int main()
     /*TaskBar_AppleCount--End*/
     
     /*Main Menu--Start*/
+
+
+    //scoreboard
+    sf::Font minecraftia_font("Minecraftia_Regular.ttf");
+
+    sf::Text title_text(aligatai_font);
+    title_text.setString("HIGH SCORES");
+    title_text.setCharacterSize(70);
+    title_text.setFillColor(sf::Color::White);
+    title_text.setPosition(sf::Vector2f((player_slctn_btn_rectangle.getPosition().x + player_slctn_btn_rectangle.getSize().x / 2.f) - 186, (player_slctn_btn_rectangle.getPosition().y + player_slctn_btn_rectangle.getSize().y / 2.f) - 55));
+    title_text.setOutlineColor(sf::Color::Black);
+    title_text.setOutlineThickness(1.f);
+
+
+    sf::Text first_text(aligatai_font);
+
+
+
 
     // menu window
     sf::RectangleShape background_rectangle({ 430.f, 600.f });
@@ -395,7 +406,7 @@ int main()
 
     /* Game Over */
 
-    sf::Font minecraftia_font("Minecraftia_Regular.ttf");
+    //sf::Font minecraftia_font("Minecraftia_Regular.ttf");
 
     sf::Text you_died_text(minecraftia_font);
     you_died_text.setCharacterSize(71);
@@ -419,7 +430,7 @@ int main()
 
 
     sf::RectangleShape red_screen({ 800.f, 800.f });
-    red_screen.setFillColor(sf::Color(255, 0, 50, 130));
+    red_screen.setFillColor(sf::Color(107, 20, 26, 200));
     red_screen.setPosition({ 0, 0 });
 
     sf::Texture respawn_texture;
@@ -427,7 +438,7 @@ int main()
     respawn_texture.setSmooth(true);
     sf::Sprite respawn_btn(respawn_texture);
     respawn_btn.setScale(sf::Vector2f( .45, .45 ));
-    respawn_btn.setPosition(sf::Vector2f((window.getSize().x / 2) + -289, (window.getSize().y / 2) + 56));
+    respawn_btn.setPosition(sf::Vector2f((window.getSize().x / 2) + -289, (window.getSize().y / 2) + 98));
 
 
     sf::Texture title_screen_texture;
@@ -435,7 +446,7 @@ int main()
     title_screen_texture.setSmooth(true);
     sf::Sprite title_screen_btn(title_screen_texture);
     title_screen_btn.setScale(sf::Vector2f(.45, .45));
-    title_screen_btn.setPosition(sf::Vector2f((window.getSize().x / 2) + -289, (window.getSize().y / 2) + 84));
+    title_screen_btn.setPosition(sf::Vector2f((window.getSize().x / 2) + -289, (window.getSize().y / 2) + 174));
 
     /* Game Over -- End */
 
@@ -611,7 +622,6 @@ int main()
                         apple_sprite.setPosition({ -40 + 19.5 + (13 * 44), 70 + -25 + (8 * 44) });
 
                         setup_snake();
-                        //set color
                         current_state = GameState::GAME_PLAY;
                     }
                 }
@@ -725,11 +735,79 @@ int main()
                 window.draw(score_text);
 
 
-
-                // save data for scoreboard
-
                 window.draw(title_screen_btn);
                 window.draw(respawn_btn);
+
+                sf::Vector2i mousePixelPos = sf::Mouse::getPosition(window); // pixel coords
+                sf::Vector2f mouseWorldPos = window.mapPixelToCoords(mousePixelPos); // convert to world coords
+
+                if (title_screen_btn.getGlobalBounds().contains(mouseWorldPos)) {
+                    title_screen_btn.setColor(sf::Color(255,255,255, 130));
+                    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+                        // save data for scoreboard 
+                        std::ofstream outFile("scoreboard.txt", std::ios::app);  // open in append mode
+                        if (!outFile) {
+                            std::cerr << "Error: could not open file for appending.\n";
+                            return 0;
+                        }
+                        std::string which_snake;
+
+                        switch (current_color) {
+                        case SnakeColor::BLINKY: which_snake = "BLINKY"; break;
+                        case SnakeColor::PINKY: which_snake = "PINKY"; break;
+                        case SnakeColor::INKY: which_snake = "INKY"; break;
+                        case SnakeColor::CLYDE: which_snake = "CLYDE"; break;
+                        }
+                        outFile << which_snake << " " << apples_eaten << "\n";
+                        outFile.close();
+
+                        
+                        current_state = GameState::MAIN_MENU;
+                        sf::sleep(sf::seconds(.2f));
+                    }
+                }
+                else {
+                    title_screen_btn.setColor(sf::Color(255, 255, 255, 255));
+                }
+
+                if (respawn_btn.getGlobalBounds().contains(mouseWorldPos)) {
+                    respawn_btn.setColor(sf::Color(255, 255, 255, 130));
+                    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+                        // save data for scoreboard 
+                        std::ofstream outFile("scoreboard.txt", std::ios::app);  // open in append mode
+                        if (!outFile) {
+                            std::cerr << "Error: could not open file for appending.\n";
+                            return 0;
+                        }
+                        std::string which_snake;
+
+                        switch (current_color) {
+                        case SnakeColor::BLINKY: which_snake = "BLINKY"; break;
+                        case SnakeColor::PINKY: which_snake = "PINKY"; break;
+                        case SnakeColor::INKY: which_snake = "INKY"; break;
+                        case SnakeColor::CLYDE: which_snake = "CLYDE"; break;
+                        }
+                        outFile << which_snake << " " << apples_eaten << "\n";
+                        outFile.close();
+
+                        //reset game values
+                        need_turn = {};
+                        x_velocity = 0;
+                        y_velocity = 0;
+                        snake_tail_vec = {};
+                        apples_eaten = 0;
+                        frame_count = 0;
+                        adjustment = 0;
+                        apple_sprite.setPosition({ -40 + 19.5 + (13 * 44), 70 + -25 + (8 * 44) });
+                        setup_snake();
+
+                        current_state = GameState::GAME_PLAY;
+                        sf::sleep(sf::seconds(.2f));
+                    }
+                }
+                else {
+                    respawn_btn.setColor(sf::Color(255, 255, 255, 255));
+                }
 
 
             }
