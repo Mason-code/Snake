@@ -170,6 +170,26 @@ int main()
     apple_text.setPosition({ 79, -9 });
     /*TaskBar_AppleCount--End*/
     
+    /*Head Sprite*/
+    sf::Texture head_texture;
+    if (!apple_texture_two.loadFromFile("INKY_head.png")) {
+        return -1;
+    }
+    sf::Sprite head_inky(apple_texture_two);
+    head_texture.setSmooth(true);
+    head_inky.setPosition({ 28.5, 1});
+
+    sf::Vector2u head_texture_size = head_texture.getSize();
+
+    // Calculate the scale factors
+    float scale_head_x = 50.f / head_texture_size.x;
+    float scale_head_y = 70.f / head_texture_size.y;
+
+    head_inky.setScale({ scale_head_x, scale_head_y });
+    head_inky.setPosition({ -40 + 19.5 + (13 * 44), 70 + -25 + (8 * 44) });
+
+    /*Head Sprite-end*/
+
     /*Main Menu--Start*/
 
 
@@ -538,6 +558,7 @@ int main()
                 }
                 move_snake();
                 window.draw(sh.shape);
+                window.draw(head_inky);
                 sf::Vector2f snake_pos = sh.shape.getPosition();
                 if (!(snake_pos.x > 25 && snake_pos.x < 765) || !(snake_pos.y > 105 && snake_pos.y < 763)) current_state = GameState::GAME_OVER; 
                 
@@ -620,7 +641,6 @@ int main()
                         frame_count = 0;
                         adjustment = 0;
                         apple_sprite.setPosition({ -40 + 19.5 + (13 * 44), 70 + -25 + (8 * 44) });
-
                         setup_snake();
                         current_state = GameState::GAME_PLAY;
                     }
@@ -907,7 +927,8 @@ void move_snake() {
     
     
      the_snake_circle.move(sf::Vector2f(x_velocity, y_velocity));
-    
+    head_inky.move(sf::Vector2f(x_velocity, y_velocity));
+
      data.every_position.push_back(the_snake_circle.getPosition());
 
      
@@ -985,6 +1006,7 @@ void setup_snake() {
     snake_head.setOutlineColor(sf::Color::Black);
     snake_head.setOutlineThickness(1.f);
 
+    head_inky.setPosition({ -40 + 19.5 + (13 * 44), 70 + -25 + (8 * 44) });
     TailVectorData data;
     data.shape = snake_head;
     data.active = true;
