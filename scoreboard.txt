@@ -1,0 +1,2 @@
+BLINKY 1
+INKY 2

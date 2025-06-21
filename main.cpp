@@ -176,18 +176,20 @@ int main()
     //scoreboard
     sf::Font minecraftia_font("Minecraftia_Regular.ttf");
 
-    sf::Text title_text(aligatai_font);
+    sf::Text title_text(minecraftia_font);
     title_text.setString("HIGH SCORES");
-    title_text.setCharacterSize(70);
+    title_text.setCharacterSize(33);
     title_text.setFillColor(sf::Color::White);
-    title_text.setPosition(sf::Vector2f((player_slctn_btn_rectangle.getPosition().x + player_slctn_btn_rectangle.getSize().x / 2.f) - 186, (player_slctn_btn_rectangle.getPosition().y + player_slctn_btn_rectangle.getSize().y / 2.f) - 55));
+    title_text.setPosition(sf::Vector2f(274,145));
     title_text.setOutlineColor(sf::Color::Black);
     title_text.setOutlineThickness(1.f);
 
-
-    sf::Text first_text(aligatai_font);
-
-
+    sf::Text rank_text(minecraftia_font);
+    rank_text.setCharacterSize(18);
+    rank_text.setFillColor(sf::Color::White);
+    rank_text.setOutlineColor(sf::Color::Black);
+    rank_text.setOutlineThickness(1.f);
+    rank_text.setPosition({ 240,170});
 
 
     // menu window
@@ -602,6 +604,83 @@ int main()
                 window.draw(player_slctn_text);
                 window.draw(exit_text);
 
+
+                //score board
+                window.draw(title_text);
+
+
+                // get scoreboard data
+                struct ScoreInfo{
+                    std::string which_snake;
+                    int apples;
+                };
+                std::vector<ScoreInfo> score_info_vec;
+
+                std::ifstream inFile("scoreboard.txt");
+                if (!inFile) {
+                    std::cerr << "Error: could not open file for reading.\n";
+                    return 0;
+                }
+
+                std::string x;
+                int y;
+                while (inFile >> x >> y) {// While there are still x and y values left in the file, read them and use them.
+                    score_info_vec.push_back({ x, y });
+                }
+
+                inFile.close();
+                
+                // organize scoreboard 
+                /*A lambda (the [] thing) is a quick way to write a tiny function.
+                This lambda sorts the vector from greatest to least apples by comparing two elements at a time.*/
+                std::sort(score_info_vec.begin(), score_info_vec.end(),
+                    [](ScoreInfo& a, ScoreInfo& b) { // im not fully sure why this works, is std::sort iterating through score_info_vec??
+                        return a.apples > b.apples;
+                    }); // std::sort compares all necessary pairs to figure out full order.
+
+
+                // assemble scoreboard
+                for (int i = 0; i < 7; i++) {
+                    if (i >= score_info_vec.size()) {
+                        rank_text.setFillColor(sf::Color::White);
+                    }
+                    rank_text.setPosition(sf::Vector2f( 260,183 + i*34 ));
+                    
+                    if (i == 1) rank_text.setString(std::to_string(i + 1) + "st");
+                    else if (i == 2) rank_text.setString(std::to_string(i + 1) + "nd");
+                    else if (i == 3) rank_text.setString(std::to_string(i + 1) + "rd");
+                    else rank_text.setString(std::to_string(i + 1) + "th");
+
+                    window.draw(rank_text);
+
+                    if (i < score_info_vec.size()) {
+
+                        ScoreInfo data = score_info_vec[i];
+
+                        if (data.which_snake == "INKY") rank_text.setFillColor(sf::Color(109, 203, 220));   
+                        if (data.which_snake == "PINKY") rank_text.setFillColor(sf::Color(234, 90, 151));
+                        if (data.which_snake == "BLINKY") rank_text.setFillColor(sf::Color(233, 28, 29));
+                        if (data.which_snake == "CLYDE") rank_text.setFillColor(sf::Color(247, 122, 24));
+
+
+                        window.draw(rank_text);
+                        rank_text.setPosition(sf::Vector2f( 320,183 + i * 34 ));
+                        rank_text.setString(data.which_snake);
+                        window.draw(rank_text);
+
+                        rank_text.setPosition(sf::Vector2f(500, 183 + i * 34));
+
+                        if (data.apples< 10) rank_text.setString("000" + std::to_string(data.apples));
+                        else if (data.apples < 100) rank_text.setString("00" + std::to_string(data.apples));
+                        else if (data.apples < 1000) rank_text.setString("0" + std::to_string(data.apples));
+                        else rank_text.setString("????");
+                        window.draw(rank_text);
+
+                    }
+
+                }
+
+
                 play_btn_rectangle.setOutlineColor(sf::Color::Transparent);
                 exit_btn_rectangle.setOutlineColor(sf::Color::Transparent);
                 player_slctn_btn_rectangle.setOutlineColor(sf::Color::Transparent);
@@ -623,18 +702,20 @@ int main()
 
                         setup_snake();
                         current_state = GameState::GAME_PLAY;
+                        sf::sleep(sf::seconds(.3f));
+
                     }
-                }
-                else {
+                }else {
                     play_btn_rectangle.setOutlineColor(sf::Color::Transparent);
                 }
                 if (player_slctn_btn_rectangle.getGlobalBounds().contains(mouseWorldPos)) {
                     player_slctn_btn_rectangle.setOutlineColor(sf::Color::Black);
                     if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
                         current_state = GameState::PLAYER_SELECTION;
+                        sf::sleep(sf::seconds(.3f));
+
                     }
-                }
-                else {
+                }else {
                     player_slctn_btn_rectangle.setOutlineColor(sf::Color::Transparent);
                 }
                 if  (exit_btn_rectangle.getGlobalBounds().contains(mouseWorldPos)) {
@@ -642,8 +723,7 @@ int main()
                     if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
                         window.close();
                     }
-                }
-                else {
+                } else {
                     exit_btn_rectangle.setOutlineColor(sf::Color::Transparent);
                 }
 
@@ -763,7 +843,7 @@ int main()
 
                         
                         current_state = GameState::MAIN_MENU;
-                        sf::sleep(sf::seconds(.2f));
+                        sf::sleep(sf::seconds(.3f));
                     }
                 }
                 else {
@@ -802,7 +882,7 @@ int main()
                         setup_snake();
 
                         current_state = GameState::GAME_PLAY;
-                        sf::sleep(sf::seconds(.2f));
+                        sf::sleep(sf::seconds(.3f));
                     }
                 }
                 else {
