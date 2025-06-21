@@ -78,14 +78,14 @@ int frame_count = 0;
 
 //  function declarations
 sf::Sprite rand_apple(sf::Sprite& the_apple_sprite);
-void move_snake();
+void move_snake(sf::Sprite& head_sprite);
 sf::Vector2f get_current_tile(sf::Transformable& item);
 sf::Vector2f get_center_position_of_tile(int x_tile, int y_tile);
 void add_tail(sf::CircleShape& last_tail);
 void move_tail(sf::CircleShape& current_tail, bool ready_to_move, int tail_iteration);
 float distance_between_two_pos(sf::Vector2f pos_one, sf::Vector2f pos_two);
 bool apple_is_on_snake(sf::Sprite& the_apple_sprite);
-void setup_snake();
+void setup_snake(sf::Sprite& head_sprite);
 sf::Color get_color();
 
 int main()
@@ -170,10 +170,60 @@ int main()
     apple_text.setPosition({ 79, -9 });
     /*TaskBar_AppleCount--End*/
     
+    /*Head Sprite*/
+
+
+    sf::Texture inky_head;
+    if (!inky_head.loadFromFile("inky_head.png"))  return -1;
+    inky_head.setSmooth(true);
+
+    sf::Texture pinky_head;
+    if (!pinky_head.loadFromFile("pinky_head.png"))  return -1;
+    pinky_head.setSmooth(true);
+
+    sf::Texture blinky_head;
+    if (!blinky_head.loadFromFile("blinky_head.png"))  return -1;
+    blinky_head.setSmooth(true);
+
+    sf::Texture clyde_head;
+    if (!clyde_head.loadFromFile("clyde_head.png"))  return -1;
+    clyde_head.setSmooth(true);
+
+
+    sf::Sprite head_sprite(blinky_head);
+    sf::FloatRect bounds = head_sprite.getLocalBounds();
+    head_sprite.setOrigin(bounds.getCenter());
+
+    sf::Vector2u head_texture_size = clyde_head.getSize();
+    // Calculate the scale factors
+    float head_scale_x = 60.f / head_texture_size.x;
+    float head_scale_y = 60.f / head_texture_size.y;
+
+    head_sprite.setScale(sf::Vector2f (head_scale_x, head_scale_y));
+
+    /*Head Sprite-end*/
+
+
     /*Main Menu--Start*/
 
 
     //scoreboard
+    sf::RectangleShape reset_btn({ 100.f, 40.f });
+    reset_btn.setFillColor(sf::Color(87, 138, 52));
+    reset_btn.setPosition(sf::Vector2f((window.getSize().x / 2) + 102 -10 , (window.getSize().y / 2) - 336));
+    reset_btn.setOutlineThickness(8.f);
+    reset_btn.setOutlineColor(sf::Color(74, 117, 44));
+
+    sf::Text reset_text(aligatai_font);
+    reset_text.setString("Reset");
+    reset_text.setFillColor(sf::Color::Black);
+    reset_text.setCharacterSize(50);
+    reset_text.setPosition(sf::Vector2f((window.getSize().x / 2) + 102 -10 + 2, (window.getSize().y / 2) - 350));
+
+
+    sf::RectangleShape line({ 3, 3 });
+    line.setFillColor(sf::Color::Black);
+
     sf::Font minecraftia_font("Minecraftia_Regular.ttf");
 
     sf::Text title_text(minecraftia_font);
@@ -182,7 +232,7 @@ int main()
     title_text.setFillColor(sf::Color::White);
     title_text.setPosition(sf::Vector2f(274,145));
     title_text.setOutlineColor(sf::Color::Black);
-    title_text.setOutlineThickness(1.f);
+    title_text.setOutlineThickness(2.f);
 
     sf::Text rank_text(minecraftia_font);
     rank_text.setCharacterSize(18);
@@ -323,9 +373,6 @@ int main()
     scale_y = snake_images_size.y / texture_size.y;
     clyde_image.setScale({ scale_x, scale_y });
     clyde_image.setPosition(sf::Vector2f((window.getSize().x / 2) - 195, background_rectangle.getPosition().y + 112));
-
-
-
 
 
     sf::RectangleShape top_left_btn({ 188.f, 122.f });
@@ -535,11 +582,12 @@ int main()
 
                     if (tail.active && distance_between_two_pos(tail.shape.getPosition(), sh.shape.getPosition()) < 15) current_state = GameState::GAME_OVER;
                     
-                    
-
                 }
-                move_snake();
+                move_snake(head_sprite);
                 window.draw(sh.shape);
+                head_sprite.setPosition(sf::Vector2f(sh.shape.getPosition().x + 20, sh.shape.getPosition().y + 20));
+                window.draw(head_sprite);
+
                 sf::Vector2f snake_pos = sh.shape.getPosition();
                 if (!(snake_pos.x > 25 && snake_pos.x < 765) || !(snake_pos.y > 105 && snake_pos.y < 763)) current_state = GameState::GAME_OVER; 
                 
@@ -581,10 +629,7 @@ int main()
                 apple_text.setString(std::to_string(apples_eaten));
                 window.draw(apple_text);
 
-
                 window.draw(apple_sprite);
-
-
 
                 window.draw(task_bar_apple);
 
@@ -603,9 +648,14 @@ int main()
                 window.draw(play_text);
                 window.draw(player_slctn_text);
                 window.draw(exit_text);
+                
+                for (int c = 0; c < 77; c++) { // 233
+                    line.setPosition(sf::Vector2f( 446, 167 + c*3 ));
+                    if (c % 2 == 0) window.draw(line);
+                }
+                
 
-
-                //score board
+                /*score board*/
                 window.draw(title_text);
 
 
@@ -668,7 +718,7 @@ int main()
                         rank_text.setString(data.which_snake);
                         window.draw(rank_text);
 
-                        rank_text.setPosition(sf::Vector2f(500, 183 + i * 34));
+                        rank_text.setPosition(sf::Vector2f(470, 183 + i * 34));
 
                         if (data.apples< 10) rank_text.setString("000" + std::to_string(data.apples));
                         else if (data.apples < 100) rank_text.setString("00" + std::to_string(data.apples));
@@ -677,7 +727,6 @@ int main()
                         window.draw(rank_text);
 
                     }
-
                 }
 
 
@@ -700,7 +749,7 @@ int main()
                         adjustment = 0;
                         apple_sprite.setPosition({ -40 + 19.5 + (13 * 44), 70 + -25 + (8 * 44) });
 
-                        setup_snake();
+                        setup_snake(head_sprite);
                         current_state = GameState::GAME_PLAY;
                         sf::sleep(sf::seconds(.3f));
 
@@ -727,7 +776,24 @@ int main()
                     exit_btn_rectangle.setOutlineColor(sf::Color::Transparent);
                 }
 
-                
+
+                if (reset_btn.getGlobalBounds().contains(mouseWorldPos)) {
+                    reset_btn.setFillColor(sf::Color::Red);
+                    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+                        // reset file
+
+                        // ofs = output_file_stream
+                        std::ofstream ofs("scoreboard.txt", std::ofstream::trunc);
+                        ofs.close();
+                    }
+                }
+                else {
+                    reset_btn.setFillColor(sf::Color(87, 138, 52));
+                }
+
+                window.draw(reset_btn);
+                window.draw(reset_text);
+
                 break;
             }
             case GameState::PLAYER_SELECTION: {
@@ -762,7 +828,6 @@ int main()
                 std::array<sf::Text*, 4> texts = { &btm_left_text, &btm_right_text, &top_left_text, &top_right_text };
                 std::array<sf::RectangleShape*, 4> buttons = { &btm_left_btn, &btm_right_btn, &top_left_btn, &top_right_btn };
 
-
                 //more pointerfying: If you have a pointer to an object, you use '->' to access its members (like functions or variables), instead of '.' which is used for regular non-pointer objects. A '->' is a member access operator 
                 // imagine if all the '->' were replaced with the '.' , its not that complicated - just another operator that does almost the same thing
                 for (int i = 0; i < 4; i++) {
@@ -771,10 +836,10 @@ int main()
                         if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
 
                             switch (i) {
-                                case 0: current_color = SnakeColor::PINKY; break;
-                                case 1: current_color = SnakeColor::CLYDE; break;
-                                case 2: current_color = SnakeColor::BLINKY; break;
-                                case 3: current_color = SnakeColor::INKY; break;
+                            case 0: current_color = SnakeColor::PINKY; head_sprite.setTexture(pinky_head); break;
+                                case 1: current_color = SnakeColor::CLYDE; head_sprite.setTexture(clyde_head); break;
+                                case 2: current_color = SnakeColor::BLINKY; head_sprite.setTexture(blinky_head); break;
+                                case 3: current_color = SnakeColor::INKY; head_sprite.setTexture(inky_head); break;
                             }
 
                             for (int b = 0; b < 4; b++) {
@@ -879,7 +944,7 @@ int main()
                         frame_count = 0;
                         adjustment = 0;
                         apple_sprite.setPosition({ -40 + 19.5 + (13 * 44), 70 + -25 + (8 * 44) });
-                        setup_snake();
+                        setup_snake(head_sprite);
 
                         current_state = GameState::GAME_PLAY;
                         sf::sleep(sf::seconds(.3f));
@@ -944,7 +1009,7 @@ sf::Sprite rand_apple(sf::Sprite& the_apple_sprite) {
     return the_apple_sprite;
 }
 
-void move_snake() {
+void move_snake(sf::Sprite& head_sprite) {
    
     TailVectorData& data = snake_tail_vec[0];
     sf::CircleShape& the_snake_circle = data.shape;
@@ -981,13 +1046,19 @@ void move_snake() {
             x_velocity = need_turn[0].x;
             y_velocity = need_turn[0].y;
             where_tail_turn = the_snake_circle.getPosition();
+            if (x_velocity > 0) head_sprite.setRotation(sf::degrees(0.f));
+            if (x_velocity < 0) head_sprite.setRotation(sf::degrees(180.f));
+            if (y_velocity > 0) head_sprite.setRotation(sf::degrees(90.f));
+            if (y_velocity < 0) head_sprite.setRotation(sf::degrees(270.f));
+
         }
         need_turn.pop_front();
     }
     
     
      the_snake_circle.move(sf::Vector2f(x_velocity, y_velocity));
-    
+     
+
      data.every_position.push_back(the_snake_circle.getPosition());
 
      
@@ -1057,7 +1128,10 @@ float distance_between_two_pos(sf::Vector2f pos_one, sf::Vector2f pos_two) {
     return distance;
 }
 
-void setup_snake() {
+void setup_snake(sf::Sprite& head_sprite) {
+
+    head_sprite.setPosition({ -20 + 25 + 22 + (44 * (4 - 1))+20, -20 + 105 + 22 + (44 * (8 - 1))+20  });
+    head_sprite.setRotation(sf::degrees(0.f));
     /*Snake_head--Start*/
     sf::CircleShape snake_head(20.f);
     snake_head.setFillColor(get_color());
