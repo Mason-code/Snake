@@ -42,6 +42,7 @@ SnakeColor current_color = SnakeColor::BLINKY;
 
 //global
 int adjustment = 0;
+int highscore_value = 0;
 
 // quick vector
 std::deque<sf::Vector2f> need_turn = {};
@@ -123,6 +124,31 @@ int main()
     }
     /*Map--End*/
 
+
+    /*cup--Start*/
+    sf::Texture cup_texture;
+    if (!cup_texture.loadFromFile("cup.png")) return -1;
+    sf::Sprite task_bar_cup(cup_texture);
+    cup_texture.setSmooth(true);
+    task_bar_cup.setPosition({ 608.5, 1 });
+
+    sf::Vector2u cup_texture_size = cup_texture.getSize();
+
+    // Calculate the scale factors
+    float cup_scale_x = 50.f / cup_texture_size.x;
+    float cup_scale_y = 70.f / cup_texture_size.y;
+
+    task_bar_cup.setScale({ cup_scale_x, cup_scale_y });
+
+
+    sf::Font aligatai_font("Aligatai_YzzL.ttf");
+    sf::Text cup_text(aligatai_font);
+    cup_text.setCharacterSize(70);
+    cup_text.setFillColor(sf::Color::White);
+    cup_text.setPosition({ 659, -9 });
+    /*cup--end*/
+
+
     /*Apple--Start*/
     if (!apple_texture.loadFromFile("apple.png")) {
         return -1; 
@@ -158,7 +184,6 @@ int main()
     task_bar_apple.setScale({ scale_x_two, scale_y_two });
 
 
-    sf::Font aligatai_font("Aligatai_YzzL.ttf");
     sf::Text apple_text(aligatai_font);
     apple_text.setCharacterSize(70); 
     apple_text.setFillColor(sf::Color::White);
@@ -495,6 +520,26 @@ int main()
     /* Game Over -- End */
 
 
+    /*music/ sound stuff*/
+    sf::Music background_music;
+    if (!background_music.openFromFile("snake_game_audio.ogg")) return -1; // error
+    background_music.setLooping(true); // setVolume(50); 
+    background_music.play();
+
+
+    sf::Texture volume_symbol;
+    if (!volume_symbol.loadFromFile("volume_btn.png")) return -1;
+    sf::Sprite volume_symbol_sprite(volume_symbol);
+    volume_symbol.setSmooth(true);
+    volume_symbol_sprite.setPosition({ 10, 10 });
+    sf::Vector2u symbol_size = volume_symbol.getSize();
+    // Calculate the scale factors
+    float symbol_scale_x = 50.f / symbol_size.x;
+    float symbol_scale_y = 50.f / symbol_size.y;
+    volume_symbol_sprite.setScale({ symbol_scale_x, symbol_scale_y });
+
+
+    /*music-end*/
 
     // run the program as long as the window is open
     while (window.isOpen())
@@ -544,7 +589,6 @@ int main()
         // clear the window with black color
         window.clear(sf::Color::Black);
 
-        
 
         // draw everything here...
         window.draw(map_border);
@@ -613,13 +657,8 @@ int main()
                         // if infinite loop game over!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                         rand_apple(apple_sprite);
                     }
-
-
                     apples_eaten++;
-
-
                 }
-
 
                 apple_text.setString(std::to_string(apples_eaten));
                 window.draw(apple_text);
@@ -628,9 +667,13 @@ int main()
 
                 window.draw(task_bar_apple);
 
+                cup_text.setString(std::to_string(highscore_value));
+                if(apples_eaten > highscore_value) cup_text.setString(std::to_string(apples_eaten));
+
+                window.draw(cup_text);
+                window.draw(task_bar_cup);
 
                 break;
-
 
             }
             case GameState::MAIN_MENU: {
@@ -788,6 +831,11 @@ int main()
 
                 window.draw(reset_btn);
                 window.draw(reset_text);
+
+
+
+                window.draw(volume_symbol_sprite);
+
 
                 break;
             }
@@ -1144,6 +1192,30 @@ void setup_snake(sf::Sprite& head_sprite) {
     for (int i = 0; i < 2;i++) {
         add_tail(data.shape);
     }
+
+
+    //also setup high score
+    std::vector<int> score_info_vec;
+
+    std::ifstream inFile("scoreboard.txt");
+    if (!inFile) {
+        std::cerr << "Error: could not open file for reading.\n";
+    }
+    
+    std::string x;
+    int y;
+    while (inFile >> x >> y) {// While there are still x and y values left in the file, read them and use them.
+        score_info_vec.push_back( y );
+    }
+
+    inFile.close();
+
+    if (!score_info_vec.empty()) {
+        auto highest_value = std::max_element(score_info_vec.begin(), score_info_vec.end()); // returns a pointer I think
+        highscore_value = *highest_value;
+    }
+    
+
 }
 
 sf::Color get_color() {
