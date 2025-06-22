@@ -1,12 +1,7 @@
 // By Mason
 // Using Snake Case as the naming convention, C++ as the language, SFML as the graphical library, and Visual Studio as the IDE
 
-
-/* 
-multi que movement strat. 
-
----no : do movement based off of tiles
-*/
+//git push origin master -- force (usefull)
 
 
 #include <iostream>
