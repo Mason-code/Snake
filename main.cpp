@@ -524,7 +524,7 @@ int main()
     sf::Music background_music;
     if (!background_music.openFromFile("snake_game_audio.ogg")) return -1; // error
     background_music.setLooping(true); // setVolume(50); 
-    background_music.play();
+    //background_music.play();
 
 
     sf::Texture volume_symbol;
@@ -538,7 +538,36 @@ int main()
     float symbol_scale_y = 50.f / symbol_size.y;
     volume_symbol_sprite.setScale({ symbol_scale_x, symbol_scale_y });
 
+    sf::CircleShape symbol_bg(30);
+    symbol_bg.setFillColor(sf::Color(74, 117, 44));
+    symbol_bg.setPosition({10 + 25 - 30, 10 + 25 - 30});
 
+    sf::RectangleShape slider_bg_line({ 30 , 130});
+    slider_bg_line.setFillColor(sf::Color(74, 117, 44));
+    slider_bg_line.setPosition({ 10 + 25 - 15, 10 + 34 });
+
+    sf::CircleShape slider_bg_circle(15);
+    slider_bg_circle.setFillColor(sf::Color(74, 117, 44));
+    slider_bg_circle.setPosition({ 10 + 25 - 15 , 10 + 34 + 115 });
+
+
+    sf::RectangleShape slider_line({ 10 , 130 });
+    slider_line.setFillColor(sf::Color(87, 138, 52));
+    slider_line.setPosition({ 10 + 25 - 5, 10 + 34 });
+    slider_line.setOutlineThickness(1);
+    slider_line.setOutlineColor(sf::Color::Black);
+
+    sf::RectangleShape slider_line_support({ 10 , 1 });
+    slider_line_support.setFillColor(sf::Color(87, 138, 52));
+    slider_line_support.setPosition({ 10 + 25 - 5, 10 + 34 + 130});
+
+    sf::CircleShape slider_circle(5);
+    slider_circle.setFillColor(sf::Color(87, 138, 52));
+    slider_circle.setPosition({ 10 + 25 - 5 , 10 + 34 + 125 });
+    slider_circle.setOutlineThickness(1);
+    slider_circle.setOutlineColor(sf::Color::Black);
+
+    bool display_slider = false;
     /*music-end*/
 
     // run the program as long as the window is open
@@ -834,9 +863,36 @@ int main()
 
 
 
+                if (symbol_bg.getGlobalBounds().contains(mouseWorldPos) ) {
+                    window.draw(symbol_bg);
+                    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left) && !display_slider) {
+                        display_slider = true;
+                        sf::sleep(sf::seconds(.1f));
+                    }
+                }
+                else {
+                    if (!slider_bg_circle.getGlobalBounds().contains(mouseWorldPos) && !slider_bg_line.getGlobalBounds().contains(mouseWorldPos)) {
+                        if (display_slider && sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+                            display_slider = false;
+                        }
+                    }
+                }
+                
+
+                if (display_slider) {
+                    window.draw(slider_bg_line);
+                    window.draw(slider_bg_circle);
+                    window.draw(slider_circle);
+                    window.draw(slider_line);
+                    window.draw(slider_line_support);
+                    window.draw(symbol_bg);
+                    window.draw(volume_symbol_sprite);
+                }
+
                 window.draw(volume_symbol_sprite);
+                
 
-
+                
                 break;
             }
             case GameState::PLAYER_SELECTION: {
