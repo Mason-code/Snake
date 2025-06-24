@@ -83,6 +83,7 @@ float distance_between_two_pos(sf::Vector2f pos_one, sf::Vector2f pos_two);
 bool apple_is_on_snake(sf::Sprite& the_apple_sprite);
 void setup_snake(sf::Sprite& head_sprite);
 sf::Color get_color();
+float volume_percentage(float current_y_pos, int top_pos, int btm_pos);
 
 int main()
 {
@@ -523,8 +524,19 @@ int main()
     /*music/ sound stuff*/
     sf::Music background_music;
     if (!background_music.openFromFile("snake_game_audio.ogg")) return -1; // error
-    background_music.setLooping(true); // setVolume(50); 
-    //background_music.play();
+    background_music.setVolume(10);
+    background_music.setLooping(true); 
+    background_music.play();
+
+    sf::Music apple_crunch;
+    if (!apple_crunch.openFromFile("apple_crunch.ogg")) return -1; // error
+    apple_crunch.setVolume(100);
+    
+
+    sf::Music button_click;
+    if (!button_click.openFromFile("btn_boomp.ogg")) return -1; // error
+    button_click.setVolume(10);
+   
 
 
     sf::Texture volume_symbol;
@@ -566,7 +578,36 @@ int main()
     slider_circle.setPosition({ 10 + 25 - 5 , 10 + 34 + 125 });
     slider_circle.setOutlineThickness(1);
     slider_circle.setOutlineColor(sf::Color::Black);
+    
+    sf::CircleShape exit_volume_btn(20.f);
+    exit_volume_btn.setFillColor(sf::Color::Black);
+    exit_volume_btn.setPosition({ 10 + 25 + 30 + 10+ 4, 10 + 25 - 20  });
+    exit_volume_btn.setOutlineColor(sf::Color::Transparent);
+    exit_volume_btn.setOutlineThickness(1);
 
+
+
+    sf::RectangleShape left_cross({ 4, 28 });
+    left_cross.setPosition({ 10 + 25 + 30 + 10 + 4 + 20, 10 + 25});
+    left_cross.setFillColor(sf::Color::White);
+    left_cross.setOrigin({ 2,14 });
+    left_cross.setRotation(sf::degrees(-45));
+
+    sf::RectangleShape right_cross({ 4, 28 });
+    right_cross.setPosition({ 10 + 25 + 30 + 10 + 4 + 20, 10 + 25 });
+    right_cross.setFillColor(sf::Color::White);
+    right_cross.setOrigin({2,14});
+    right_cross.setRotation(sf::degrees(45.f));
+
+
+    // increase radius and position
+    sf::CircleShape sliding_circle(5);
+    sliding_circle.setFillColor(sf::Color::Black);
+    sliding_circle.setPosition({ 10 + 25 - 5 , 65}); //65
+    sliding_circle.setOutlineThickness((100 / 15) + 1);
+    sliding_circle.setOutlineColor(sf::Color::Transparent);
+
+    bool interacting_with_volume = false;
     bool display_slider = false;
     /*music-end*/
 
@@ -687,6 +728,7 @@ int main()
                         rand_apple(apple_sprite);
                     }
                     apples_eaten++;
+                    apple_crunch.play();
                 }
 
                 apple_text.setString(std::to_string(apples_eaten));
@@ -805,7 +847,8 @@ int main()
                 sf::Vector2f mouseWorldPos = window.mapPixelToCoords(mousePixelPos); // convert to world coords
                 if (play_btn_rectangle.getGlobalBounds().contains(mouseWorldPos)) {
                     play_btn_rectangle.setOutlineColor(sf::Color::Black);
-                    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {                        
+                    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {   
+                        button_click.play();
                         //reset game values
                         need_turn = {};
                         x_velocity = 0;
@@ -827,6 +870,7 @@ int main()
                 if (player_slctn_btn_rectangle.getGlobalBounds().contains(mouseWorldPos)) {
                     player_slctn_btn_rectangle.setOutlineColor(sf::Color::Black);
                     if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+                        button_click.play();
                         current_state = GameState::PLAYER_SELECTION;
                         sf::sleep(sf::seconds(.3f));
 
@@ -837,6 +881,7 @@ int main()
                 if  (exit_btn_rectangle.getGlobalBounds().contains(mouseWorldPos)) {
                     exit_btn_rectangle.setOutlineColor(sf::Color::Black);
                     if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+                        button_click.play();
                         window.close();
                     }
                 } else {
@@ -866,17 +911,11 @@ int main()
                 if (symbol_bg.getGlobalBounds().contains(mouseWorldPos) ) {
                     window.draw(symbol_bg);
                     if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left) && !display_slider) {
+                        button_click.play();
                         display_slider = true;
-                        sf::sleep(sf::seconds(.1f));
                     }
                 }
-                else {
-                    if (!slider_bg_circle.getGlobalBounds().contains(mouseWorldPos) && !slider_bg_line.getGlobalBounds().contains(mouseWorldPos)) {
-                        if (display_slider && sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
-                            display_slider = false;
-                        }
-                    }
-                }
+               
                 
 
                 if (display_slider) {
@@ -887,10 +926,55 @@ int main()
                     window.draw(slider_line_support);
                     window.draw(symbol_bg);
                     window.draw(volume_symbol_sprite);
+                    window.draw(exit_volume_btn);
+                    window.draw(right_cross);
+                    window.draw(left_cross);
+
+                    if (sliding_circle.getGlobalBounds().contains(mouseWorldPos) ) {
+                        sliding_circle.setOutlineColor(sf::Color::Red);
+                        if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+                            interacting_with_volume = true;
+                            
+                        }
+                    }
+                    else {
+                        
+                        sliding_circle.setOutlineColor(sf::Color::Transparent);
+
+                    }
+                    if (!sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+                        interacting_with_volume = false;
+                        
+                    }
+
+
+                    if (interacting_with_volume) {
+                        sliding_circle.setOutlineColor(sf::Color::Red);
+                        if (mouseWorldPos.y >= 65 && mouseWorldPos.y <= 169) {
+                            sliding_circle.setPosition({ 10 + 25 - 5 , mouseWorldPos.y }); 
+                            float volume = volume_percentage(sliding_circle.getPosition().y, 65, 169);
+                            background_music.setVolume(volume / 10);
+                            apple_crunch.setVolume(volume);
+                            button_click.setVolume(volume / 10);
+                            sliding_circle.setOutlineThickness((volume / 15)+1);
+
+                        }
+                    }
+                    window.draw(sliding_circle);
+                  
                 }
 
                 window.draw(volume_symbol_sprite);
                 
+                if (exit_volume_btn.getGlobalBounds().contains(mouseWorldPos)) {
+                    exit_volume_btn.setOutlineColor(sf::Color(74, 117, 44));
+                    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+                        display_slider = false;
+                    }
+                }
+                else {
+                    exit_volume_btn.setOutlineColor(sf::Color::Transparent);
+                }
 
                 
                 break;
@@ -916,6 +1000,7 @@ int main()
                 if (back_btn.getGlobalBounds().contains(mouseWorldPos)) {
                     back_btn.setFillColor(sf::Color(87, 138, 52));
                     if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+                        button_click.play();
                         current_state = GameState::MAIN_MENU;
                     }
                 }
@@ -933,7 +1018,7 @@ int main()
                     if (buttons[i]->getGlobalBounds().contains(mouseWorldPos) && texts[i]->getOutlineColor() != sf::Color::Black) {
                         buttons[i]->setOutlineColor(sf::Color::Black);
                         if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
-
+                            button_click.play();
                             switch (i) {
                             case 0: current_color = SnakeColor::PINKY; head_sprite.setTexture(pinky_head); break;
                                 case 1: current_color = SnakeColor::CLYDE; head_sprite.setTexture(clyde_head); break;
@@ -988,6 +1073,7 @@ int main()
                 if (title_screen_btn.getGlobalBounds().contains(mouseWorldPos)) {
                     title_screen_btn.setColor(sf::Color(255,255,255, 130));
                     if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+                        button_click.play();
                         // save data for scoreboard 
                         std::ofstream outFile("scoreboard.txt", std::ios::app);  // open in append mode
                         if (!outFile) {
@@ -1017,6 +1103,7 @@ int main()
                 if (respawn_btn.getGlobalBounds().contains(mouseWorldPos)) {
                     respawn_btn.setColor(sf::Color(255, 255, 255, 130));
                     if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+                        button_click.play();
                         // save data for scoreboard 
                         std::ofstream outFile("scoreboard.txt", std::ios::app);  // open in append mode
                         if (!outFile) {
@@ -1149,7 +1236,6 @@ void move_snake(sf::Sprite& head_sprite) {
             if (x_velocity < 0) head_sprite.setRotation(sf::degrees(180.f));
             if (y_velocity > 0) head_sprite.setRotation(sf::degrees(90.f));
             if (y_velocity < 0) head_sprite.setRotation(sf::degrees(270.f));
-
         }
         need_turn.pop_front();
     }
@@ -1282,4 +1368,9 @@ sf::Color get_color() {
         case SnakeColor::CLYDE: return sf::Color(247, 122, 24);
     }
     
+}
+
+float volume_percentage(float current_y_pos, int top_pos, int btm_pos) {
+    float volume_level = (btm_pos - current_y_pos) / (btm_pos - top_pos) * 100;
+    return volume_level;
 }
