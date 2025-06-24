@@ -19,6 +19,9 @@
 #include <algorithm>
 
 
+#include <windows.h>
+
+
 //#include <imgui.h>
 //#include <imgui-SFML.h>
 
@@ -86,7 +89,8 @@ void setup_snake(sf::Sprite& head_sprite);
 sf::Color get_color();
 float volume_percentage(float current_y_pos, int top_pos, int btm_pos);
 
-int main()
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) 
+
 {
 
     // create the window
