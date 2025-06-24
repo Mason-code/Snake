@@ -27,7 +27,8 @@ enum class GameState {
     MAIN_MENU,
     GAME_PLAY,
     GAME_OVER,
-    PLAYER_SELECTION
+    PLAYER_SELECTION,
+    YOU_WIN
 };
 enum class SnakeColor {
     PINKY,
@@ -54,7 +55,7 @@ sf::Texture apple_texture;
 /*snake*/
 float x_velocity = 0;
 float y_velocity = 0;
-const int movement_offset = 50;
+const int movement_offset = 11;
 
 /*tail*/
 struct TailVectorData {
@@ -66,7 +67,7 @@ struct TailVectorData {
 std::vector<TailVectorData> snake_tail_vec = {};
 
 
-const float uni_speed = .8f; //.75
+const float uni_speed = 3.8f; //.8
 int apples_eaten = 0;
 
 int frame_count = 0;
@@ -89,7 +90,9 @@ int main()
 {
 
     // create the window
-    sf::RenderWindow window(sf::VideoMode({ 800, 800 }), "Snake");
+    sf::RenderWindow window(sf::VideoMode({ 800, 800 }), "Snake", sf::Style::Titlebar | sf::Style::Close);
+
+    window.setFramerateLimit(120);
 
     /*Map--Start*/
     //map border
@@ -492,11 +495,11 @@ int main()
     sf::Text score_text(minecraftia_font);
     score_text.setCharacterSize(37);
     score_text.setFillColor(sf::Color(242, 241, 244));
-    score_text.setPosition(sf::Vector2f((window.getSize().x / 2) + -93, (window.getSize().y / 2) -22));
+    score_text.setPosition(sf::Vector2f((window.getSize().x / 2) + -93 - 15, (window.getSize().y / 2) -22));
     sf::Text score_text_shadow(minecraftia_font);
     score_text_shadow.setCharacterSize(37);
     score_text_shadow.setFillColor(sf::Color(110, 105, 110));
-    score_text_shadow.setPosition(sf::Vector2f((window.getSize().x / 2) + -93 + 5, (window.getSize().y / 2) - 22 + 5));
+    score_text_shadow.setPosition(sf::Vector2f((window.getSize().x / 2) + -93 + 5 - 15, (window.getSize().y / 2) - 22 + 5));
 
 
     sf::RectangleShape red_screen({ 800.f, 800.f });
@@ -521,21 +524,54 @@ int main()
     /* Game Over -- End */
 
 
+    /* You Win */
+
+
+    sf::Text you_win_text(minecraftia_font);
+    you_win_text.setCharacterSize(71);
+    you_win_text.setFillColor(sf::Color(242, 241, 244));
+    you_win_text.setPosition(sf::Vector2f((window.getSize().x / 2) - 186, (window.getSize().y / 2) - 170));
+    you_win_text.setString("You  Win!!!");
+    sf::Text you_win_text_shadow(minecraftia_font);
+    you_win_text_shadow.setCharacterSize(71);
+    you_win_text_shadow.setFillColor(sf::Color(110, 105, 110));
+    you_win_text_shadow.setPosition(sf::Vector2f((window.getSize().x / 2) - 186 + 9, (window.getSize().y / 2) - 170 + 9));
+    you_win_text_shadow.setString("You  Win!!!");
+
+    sf::RectangleShape blue_screen({ 800.f, 800.f });
+    blue_screen.setFillColor(sf::Color(77, 193, 249, 200));
+    blue_screen.setPosition({ 0, 0 });
+
+
+    sf::Text win_score_text(minecraftia_font);
+    win_score_text.setCharacterSize(37);
+    win_score_text.setFillColor(sf::Color(242, 241, 244));
+    win_score_text.setPosition(sf::Vector2f((window.getSize().x / 2) + -93 - 20, (window.getSize().y / 2) - 22));
+    sf::Text win_score_text_shadow(minecraftia_font);
+    win_score_text_shadow.setCharacterSize(37);
+    win_score_text_shadow.setFillColor(sf::Color(110, 105, 110));
+    win_score_text_shadow.setPosition(sf::Vector2f((window.getSize().x / 2) + -93 + 5 - 20, (window.getSize().y / 2) - 22 + 5));
+
+
+
+    /* You_win -- End */
+
+
     /*music/ sound stuff*/
     sf::Music background_music;
     if (!background_music.openFromFile("snake_game_audio.ogg")) return -1; // error
-    background_music.setVolume(10);
+    background_music.setVolume(100);
     background_music.setLooping(true); 
     background_music.play();
 
     sf::Music apple_crunch;
     if (!apple_crunch.openFromFile("apple_crunch.ogg")) return -1; // error
-    apple_crunch.setVolume(100);
+    apple_crunch.setVolume(700);
     
 
     sf::Music button_click;
     if (!button_click.openFromFile("btn_boomp.ogg")) return -1; // error
-    button_click.setVolume(10);
+    button_click.setVolume(100);
    
 
 
@@ -720,14 +756,16 @@ int main()
 
                 if (apple_location == snake_location) {
                     TailVectorData& data = snake_tail_vec.back();
-                    add_tail(data.shape);
+                    
+                    for (int i = 0; i < 1; i++) {
+                        add_tail(data.shape);
+                    }
 
                     rand_apple(apple_sprite);
                     while (apple_is_on_snake(apple_sprite)) {
-                        // if infinite loop game over!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                         rand_apple(apple_sprite);
                     }
-                    apples_eaten++;
+                    apples_eaten+= 1;
                     apple_crunch.play();
                 }
 
@@ -743,6 +781,11 @@ int main()
 
                 window.draw(cup_text);
                 window.draw(task_bar_cup);
+
+
+                if (apples_eaten == 200) {
+                    current_state = GameState::YOU_WIN;
+                }
 
                 break;
 
@@ -833,7 +876,9 @@ int main()
                         else if (data.apples < 100) rank_text.setString("00" + std::to_string(data.apples));
                         else if (data.apples < 1000) rank_text.setString("0" + std::to_string(data.apples));
                         else rank_text.setString("????");
+                        if (data.apples == 200) rank_text.setFillColor(sf::Color::Black);
                         window.draw(rank_text);
+                        rank_text.setFillColor(sf::Color::Transparent);
 
                     }
                 }
@@ -934,7 +979,6 @@ int main()
                         sliding_circle.setOutlineColor(sf::Color::Red);
                         if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
                             interacting_with_volume = true;
-                            
                         }
                     }
                     else {
@@ -953,9 +997,9 @@ int main()
                         if (mouseWorldPos.y >= 65 && mouseWorldPos.y <= 169) {
                             sliding_circle.setPosition({ 10 + 25 - 5 , mouseWorldPos.y }); 
                             float volume = volume_percentage(sliding_circle.getPosition().y, 65, 169);
-                            background_music.setVolume(volume / 10);
-                            apple_crunch.setVolume(volume);
-                            button_click.setVolume(volume / 10);
+                            background_music.setVolume(volume);
+                            apple_crunch.setVolume(volume * 7);
+                            button_click.setVolume(volume);
                             sliding_circle.setOutlineThickness((volume / 15)+1);
 
                         }
@@ -1135,12 +1179,103 @@ int main()
                         current_state = GameState::GAME_PLAY;
                         sf::sleep(sf::seconds(.3f));
                     }
+
                 }
                 else {
                     respawn_btn.setColor(sf::Color(255, 255, 255, 255));
                 }
 
+                break;
+            }
+            case GameState::YOU_WIN: {
+                window.draw(blue_screen);
 
+                window.draw(you_win_text_shadow);
+                window.draw(you_win_text);
+
+                win_score_text.setString("Score: " + std::to_string(apples_eaten));
+                win_score_text_shadow.setString("Score: " + std::to_string(apples_eaten));
+                window.draw(win_score_text_shadow);
+                window.draw(win_score_text);
+
+
+                window.draw(title_screen_btn);
+                window.draw(respawn_btn);
+
+                sf::Vector2i mousePixelPos = sf::Mouse::getPosition(window); // pixel coords
+                sf::Vector2f mouseWorldPos = window.mapPixelToCoords(mousePixelPos); // convert to world coords
+
+                if (title_screen_btn.getGlobalBounds().contains(mouseWorldPos)) {
+                    title_screen_btn.setColor(sf::Color(255, 255, 255, 130));
+                    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+                        button_click.play();
+                        // save data for scoreboard 
+                        std::ofstream outFile("scoreboard.txt", std::ios::app);  // open in append mode
+                        if (!outFile) {
+                            std::cerr << "Error: could not open file for appending.\n";
+                            return 0;
+                        }
+                        std::string which_snake;
+
+                        switch (current_color) {
+                        case SnakeColor::BLINKY: which_snake = "BLINKY"; break;
+                        case SnakeColor::PINKY: which_snake = "PINKY"; break;
+                        case SnakeColor::INKY: which_snake = "INKY"; break;
+                        case SnakeColor::CLYDE: which_snake = "CLYDE"; break;
+                        }
+                        outFile << which_snake << " " << apples_eaten << "\n";
+                        outFile.close();
+
+
+                        current_state = GameState::MAIN_MENU;
+                        sf::sleep(sf::seconds(.3f));
+                    }
+                }
+                else {
+                    title_screen_btn.setColor(sf::Color(255, 255, 255, 255));
+                }
+
+                if (respawn_btn.getGlobalBounds().contains(mouseWorldPos)) {
+                    respawn_btn.setColor(sf::Color(255, 255, 255, 130));
+                    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+                        button_click.play();
+                        // save data for scoreboard 
+                        std::ofstream outFile("scoreboard.txt", std::ios::app);  // open in append mode
+                        if (!outFile) {
+                            std::cerr << "Error: could not open file for appending.\n";
+                            return 0;
+                        }
+                        std::string which_snake;
+
+                        switch (current_color) {
+                        case SnakeColor::BLINKY: which_snake = "BLINKY"; break;
+                        case SnakeColor::PINKY: which_snake = "PINKY"; break;
+                        case SnakeColor::INKY: which_snake = "INKY"; break;
+                        case SnakeColor::CLYDE: which_snake = "CLYDE"; break;
+                        }
+                        outFile << which_snake << " " << apples_eaten << "\n";
+                        outFile.close();
+
+                        //reset game values
+                        need_turn = {};
+                        x_velocity = 0;
+                        y_velocity = 0;
+                        snake_tail_vec = {};
+                        apples_eaten = 0;
+                        frame_count = 0;
+                        adjustment = 0;
+                        apple_sprite.setPosition({ -40 + 19.5 + (13 * 44), 70 + -25 + (8 * 44) });
+                        setup_snake(head_sprite);
+
+                        current_state = GameState::GAME_PLAY;
+                        sf::sleep(sf::seconds(.3f));
+                    }
+                }
+                else {
+                    respawn_btn.setColor(sf::Color(255, 255, 255, 255));
+                }
+
+                break;
             }
         }
         
