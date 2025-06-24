@@ -89,8 +89,7 @@ void setup_snake(sf::Sprite& head_sprite);
 sf::Color get_color();
 float volume_percentage(float current_y_pos, int top_pos, int btm_pos);
 
-
-// int main() is gone, idk what happened , it works T^T
+// my int main() was being weird so i guess we are doing this now T^T
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) 
 
 {
