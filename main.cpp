@@ -670,19 +670,19 @@ int main()
 
             if (const auto* key = event->getIf<sf::Event::KeyPressed>()) { //Check if the current event is a KeyPressed event. | If it is, get a pointer to the KeyPressed data and store it in 'key'.
 
-                if (key->code == sf::Keyboard::Key::W && y_velocity != ing_donuts) {
+                if ((key->code == sf::Keyboard::Key::W || key->code == sf::Keyboard::Key::Up) && y_velocity != ing_donuts) {
                     need_turn.push_back(sf::Vector2f(0.f, -ing_donuts));
 
                 }
-                if (key->code == sf::Keyboard::Key::A && x_velocity != ing_donuts) {
+                if ((key->code == sf::Keyboard::Key::A || key->code == sf::Keyboard::Key::Left) && x_velocity != ing_donuts) {
                     need_turn.push_back(sf::Vector2f(-ing_donuts, 0.f));
 
                 }
-                if (key->code == sf::Keyboard::Key::S && y_velocity != -ing_donuts) {
+                if ((key->code == sf::Keyboard::Key::S || key->code == sf::Keyboard::Key::Down) && y_velocity != -ing_donuts) {
                     need_turn.push_back(sf::Vector2f(0.f, ing_donuts));
 
                 }
-                if (key->code == sf::Keyboard::Key::D && x_velocity != -ing_donuts) {
+                if ((key->code == sf::Keyboard::Key::D || key->code == sf::Keyboard::Key::Right) && x_velocity != -ing_donuts) {
                     need_turn.push_back(sf::Vector2f(ing_donuts, 0.f));
                 }
             }
