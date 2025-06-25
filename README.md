@@ -34,7 +34,7 @@ I might improve upon these blemishes later.
 
 ## ⚠️ How to Play
 
-**!!!!!! If you want to play the game just go to the [Releases](../../releases) and download the executable !!!!!!!**
+**!!!!!! If you want to play the game just go to the [releases](../../releases) and download the executable !!!!!!!**
 
 ---
 
@@ -52,7 +52,7 @@ I might improve upon these blemishes later.
 
 1. Make sure you have Visual Studio installed with C++ support.  
 2. Clone this repo:  
-   `git clone https://github.com/yourname/snake-game.git`  
+   `https://github.com/Mason-code/Snake.git`  
 3. Open the `.sln` file in Visual Studio.  
 4. Make sure SFML is installed and linked correctly.  
 5. Build and run the project.
