@@ -99,6 +99,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     window.setFramerateLimit(120);
 
+
+    sf::Image icon;
+    if (icon.loadFromFile("apple32by32.png")) {
+      
+        window.setIcon(icon.getSize(), icon.getPixelsPtr());
+    }
+
     /*Map--Start*/
     //map border
     sf::RectangleShape map_border({ 800.f, 800.f });
