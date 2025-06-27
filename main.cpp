@@ -570,11 +570,18 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 
     /*music/ sound stuff*/
+    bool state_changed = true;
+
     sf::Music background_music;
     if (!background_music.openFromFile("snake_game_audio.ogg")) return -1; // error
-    background_music.setVolume(100);
+    background_music.setVolume(60);
     background_music.setLooping(true); 
-    background_music.play();
+    
+
+    sf::Music selection_music;
+    if (!selection_music.openFromFile("snake_selection_audio.ogg")) return -1; // error
+    selection_music.setVolume(100);
+    selection_music.setLooping(true);
 
     sf::Music apple_crunch;
     if (!apple_crunch.openFromFile("apple_crunch.ogg")) return -1; // error
@@ -706,6 +713,20 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
         // clear the window with black color
         window.clear(sf::Color::Black);
+
+        if (state_changed && current_state == GameState::PLAYER_SELECTION) {
+            background_music.pause();
+            selection_music.play();
+            state_changed = false;
+            
+        }
+        else if (state_changed) {
+            selection_music.pause();
+            background_music.play();
+            state_changed = false;
+        }
+
+
 
 
         // draw everything here...
@@ -929,6 +950,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                     if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
                         button_click.play();
                         current_state = GameState::PLAYER_SELECTION;
+                        state_changed = true;
                         sf::sleep(sf::seconds(.3f));
 
                     }
@@ -1009,9 +1031,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                         if (mouseWorldPos.y >= 65 && mouseWorldPos.y <= 169) {
                             sliding_circle.setPosition({ 10 + 25 - 5 , mouseWorldPos.y }); 
                             float volume = volume_percentage(sliding_circle.getPosition().y, 65, 169);
-                            background_music.setVolume(volume);
+                            background_music.setVolume(volume * .6);
                             apple_crunch.setVolume(volume * 7);
                             button_click.setVolume(volume);
+                            selection_music.setVolume(volume);
                             sliding_circle.setOutlineThickness((volume / 15)+1);
 
                         }
@@ -1058,6 +1081,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                     if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
                         button_click.play();
                         current_state = GameState::MAIN_MENU;
+                        state_changed = true;
                     }
                 }
                 else {
