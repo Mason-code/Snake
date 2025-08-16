@@ -1,1 +1,4 @@
 C:\Dev\Snake\x64\Release\Snake.exe
+C:\Dev\Snake\x64\Release\Snake.vcxproj.CopyComplete
+C:\Dev\Snake\x64\Release\ogg.dll
+C:\Dev\Snake\x64\Release\vorbis.dll
