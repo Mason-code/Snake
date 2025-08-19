@@ -1,0 +1,3 @@
+C:\Dev\Snake\x64\Release\ogg.dll
+C:\Dev\Snake\x64\Release\vorbis.dll
+C:\Dev\Snake\Snake\x64\Release\Snake.vcxproj.Up2Date
