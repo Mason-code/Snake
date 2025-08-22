@@ -49,43 +49,43 @@ int adjustment = 0;
 int highscore_value = 0;
 
 // quick vector
-std::deque<sf::Vector2f> need_turn = {};
+std::deque<sf::Vector2f> need_turn = {}; /////////////////// add to snake Class //////////////////////////////////////////////////
 
 
 /*apple*/
 sf::Texture apple_texture;
 
-/*snake*/
+/*snake*/ /////////////////// add to snake Class //////////////////////////////////////////////////
 float x_velocity = 0;
 float y_velocity = 0;
 const int movement_offset = 11;
 
-/*tail*/
+/*tail*/ /////////////////// add to snake Class //////////////////////////////////////////////////
 struct TailVectorData {
     sf::CircleShape shape;
     bool active = false; // ready to move: 44 away
     std::deque<sf::Vector2f> every_position;
 };
 
-std::vector<TailVectorData> snake_tail_vec = {};
+std::vector<TailVectorData> snake_tail_vec = {}; /////////////////// add to snake Class //////////////////////////////////////////////////
 
 
-const float uni_speed = 3.8f; //.8
-int apples_eaten = 0;
+const float uni_speed = 3.8f; //.8 /////////////////// add to snake Class //////////////////////////////////////////////////
+int apples_eaten = 0; /////////////////// add to snake Class ////////////////////////////////////////////////// 
 
 int frame_count = 0;
 
 
 //  function declarations
 sf::Sprite rand_apple(sf::Sprite& the_apple_sprite);
-void move_snake(sf::Sprite& head_sprite);
+void move_snake(sf::Sprite& head_sprite); /////////////////// add to snake Class //////////////////////////////////////////////////
 sf::Vector2f get_current_tile(sf::Transformable& item);
 sf::Vector2f get_center_position_of_tile(int x_tile, int y_tile);
-void add_tail(sf::CircleShape& last_tail);
-void move_tail(sf::CircleShape& current_tail, bool ready_to_move, int tail_iteration);
+void add_tail(sf::CircleShape& last_tail); /////////////////// add to snake Class //////////////////////////////////////////////////
+void move_tail(sf::CircleShape& current_tail, bool ready_to_move, int tail_iteration); /////////////////// add to snake Class //////////////////////////////////////////////////
 float distance_between_two_pos(sf::Vector2f pos_one, sf::Vector2f pos_two);
 bool apple_is_on_snake(sf::Sprite& the_apple_sprite);
-void setup_snake(sf::Sprite& head_sprite);
+void setup_snake(sf::Sprite& head_sprite); /////////////////// add to snake Class //////////////////////////////////////////////////
 sf::Color get_color();
 float volume_percentage(float current_y_pos, int top_pos, int btm_pos);
 
