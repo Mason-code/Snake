@@ -43,51 +43,61 @@ GameState current_state = GameState::MAIN_MENU;
 SnakeColor current_color = SnakeColor::BLINKY;
 
 
+// i think im using the class wrong because its kinda useless here
+class Snake {
+    private:
+
+    public:
+        /*snake*/
+        float x_velocity = 0;
+        float y_velocity = 0;
+        const int movement_offset = 11;
+
+        /*tail*/
+        struct TailVectorData {
+            sf::CircleShape shape;
+            bool active = false; // ready to move: 44 away
+            std::deque<sf::Vector2f> every_position;
+        };
+
+        // quick vector
+        std::deque<sf::Vector2f> need_turn = {}; 
+
+        std::vector<TailVectorData> snake_tail_vec = {}; 
+
+        const float uni_speed = 3.8f; 
+        int apples_eaten = 0; 
+
+};
+
+Snake snake;
 
 //global
 int adjustment = 0;
 int highscore_value = 0;
 
-// quick vector
-std::deque<sf::Vector2f> need_turn = {}; /////////////////// add to snake Class //////////////////////////////////////////////////
 
 
 /*apple*/
 sf::Texture apple_texture;
 
-/*snake*/ /////////////////// add to snake Class //////////////////////////////////////////////////
-float x_velocity = 0;
-float y_velocity = 0;
-const int movement_offset = 11;
-
-/*tail*/ /////////////////// add to snake Class //////////////////////////////////////////////////
-struct TailVectorData {
-    sf::CircleShape shape;
-    bool active = false; // ready to move: 44 away
-    std::deque<sf::Vector2f> every_position;
-};
-
-std::vector<TailVectorData> snake_tail_vec = {}; /////////////////// add to snake Class //////////////////////////////////////////////////
-
-
-const float uni_speed = 3.8f; //.8 /////////////////// add to snake Class //////////////////////////////////////////////////
-int apples_eaten = 0; /////////////////// add to snake Class ////////////////////////////////////////////////// 
 
 int frame_count = 0;
 
 
 //  function declarations
 sf::Sprite rand_apple(sf::Sprite& the_apple_sprite);
-void move_snake(sf::Sprite& head_sprite); /////////////////// add to snake Class //////////////////////////////////////////////////
 sf::Vector2f get_current_tile(sf::Transformable& item);
 sf::Vector2f get_center_position_of_tile(int x_tile, int y_tile);
-void add_tail(sf::CircleShape& last_tail); /////////////////// add to snake Class //////////////////////////////////////////////////
-void move_tail(sf::CircleShape& current_tail, bool ready_to_move, int tail_iteration); /////////////////// add to snake Class //////////////////////////////////////////////////
 float distance_between_two_pos(sf::Vector2f pos_one, sf::Vector2f pos_two);
 bool apple_is_on_snake(sf::Sprite& the_apple_sprite);
-void setup_snake(sf::Sprite& head_sprite); /////////////////// add to snake Class //////////////////////////////////////////////////
 sf::Color get_color();
 float volume_percentage(float current_y_pos, int top_pos, int btm_pos);
+void add_tail(sf::CircleShape& last_tail);
+void move_tail(sf::CircleShape& current_tail, bool ready_to_move, int tail_iteration);
+void setup_snake(sf::Sprite& head_sprite);
+void move_snake(sf::Sprite& head_sprite);
+
 
 // my int main() was being weird so i guess we are doing this now T^T
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) 
@@ -673,7 +683,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         while (const std::optional event = window.pollEvent())
         {
 
-            float ing_donuts = uni_speed;
+            float ing_donuts = snake.uni_speed;
 
             /*
 
@@ -689,20 +699,20 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
             if (const auto* key = event->getIf<sf::Event::KeyPressed>()) { //Check if the current event is a KeyPressed event. | If it is, get a pointer to the KeyPressed data and store it in 'key'.
 
-                if ((key->code == sf::Keyboard::Key::W || key->code == sf::Keyboard::Key::Up) && y_velocity != ing_donuts) {
-                    need_turn.push_back(sf::Vector2f(0.f, -ing_donuts));
+                if ((key->code == sf::Keyboard::Key::W || key->code == sf::Keyboard::Key::Up) && snake.y_velocity != ing_donuts) {
+                    snake.need_turn.push_back(sf::Vector2f(0.f, -ing_donuts));
 
                 }
-                if ((key->code == sf::Keyboard::Key::A || key->code == sf::Keyboard::Key::Left) && x_velocity != ing_donuts) {
-                    need_turn.push_back(sf::Vector2f(-ing_donuts, 0.f));
+                if ((key->code == sf::Keyboard::Key::A || key->code == sf::Keyboard::Key::Left) && snake.x_velocity != ing_donuts) {
+                    snake.need_turn.push_back(sf::Vector2f(-ing_donuts, 0.f));
 
                 }
-                if ((key->code == sf::Keyboard::Key::S || key->code == sf::Keyboard::Key::Down) && y_velocity != -ing_donuts) {
-                    need_turn.push_back(sf::Vector2f(0.f, ing_donuts));
+                if ((key->code == sf::Keyboard::Key::S || key->code == sf::Keyboard::Key::Down) && snake.y_velocity != -ing_donuts) {
+                    snake.need_turn.push_back(sf::Vector2f(0.f, ing_donuts));
 
                 }
-                if ((key->code == sf::Keyboard::Key::D || key->code == sf::Keyboard::Key::Right) && x_velocity != -ing_donuts) {
-                    need_turn.push_back(sf::Vector2f(ing_donuts, 0.f));
+                if ((key->code == sf::Keyboard::Key::D || key->code == sf::Keyboard::Key::Right) && snake.x_velocity != -ing_donuts) {
+                    snake.need_turn.push_back(sf::Vector2f(ing_donuts, 0.f));
                 }
             }
 
@@ -743,11 +753,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         switch (current_state) {
             case GameState::GAME_PLAY: {
                 
-                TailVectorData& sh = snake_tail_vec[0];
+                Snake::TailVectorData& sh = snake.snake_tail_vec[0];
 
                 int iteration_value = 0;
-                int ultima_value = snake_tail_vec.size() - 1;
-                for (auto& tail : snake_tail_vec) {
+                int ultima_value = snake.snake_tail_vec.size() - 1;
+                for (auto& tail : snake.snake_tail_vec) {
                     if (iteration_value == 0) {
                         tail.active = true;
                         iteration_value++;
@@ -772,9 +782,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 
                 // do I move last tail?
-                TailVectorData& ultima = snake_tail_vec[ultima_value];
-                if (!ultima.active && snake_tail_vec.size() > 1) {
-                    TailVectorData& penultima = snake_tail_vec[ultima_value - 1];
+                Snake::TailVectorData& ultima = snake.snake_tail_vec[ultima_value];
+                if (!ultima.active && snake.snake_tail_vec.size() > 1) {
+                    Snake::TailVectorData& penultima = snake.snake_tail_vec[ultima_value - 1];
                     float distance = distance_between_two_pos(penultima.shape.getPosition(), ultima.shape.getPosition()); // math oooooo
                     if (distance >= 44) {
                         ultima.active = true;
@@ -782,13 +792,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                 }
 
 
-                sh = snake_tail_vec[0];
+                sh = snake.snake_tail_vec[0];
                 // Collision detection
                 sf::Vector2f apple_location = get_current_tile(apple_sprite);
                 sf::Vector2f snake_location = get_current_tile(sh.shape);
 
                 if (apple_location == snake_location) {
-                    TailVectorData& data = snake_tail_vec.back();
+                    Snake::TailVectorData& data = snake.snake_tail_vec.back();
                     
                     for (int i = 0; i < 1; i++) {
                         add_tail(data.shape);
@@ -798,11 +808,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                     while (apple_is_on_snake(apple_sprite)) {
                         rand_apple(apple_sprite);
                     }
-                    apples_eaten+= 1;
+                    snake.apples_eaten+= 1;
                     apple_crunch.play();
                 }
 
-                apple_text.setString(std::to_string(apples_eaten));
+                apple_text.setString(std::to_string(snake.apples_eaten));
                 window.draw(apple_text);
 
                 window.draw(apple_sprite);
@@ -810,13 +820,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                 window.draw(task_bar_apple);
 
                 cup_text.setString(std::to_string(highscore_value));
-                if(apples_eaten > highscore_value) cup_text.setString(std::to_string(apples_eaten));
+                if(snake.apples_eaten > highscore_value) cup_text.setString(std::to_string(snake.apples_eaten));
 
                 window.draw(cup_text);
                 window.draw(task_bar_cup);
 
 
-                if (apples_eaten == 200) {
+                if (snake.apples_eaten == 200) {
                     current_state = GameState::YOU_WIN;
                 }
 
@@ -928,11 +938,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                     if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {   
                         button_click.play();
                         //reset game values
-                        need_turn = {};
-                        x_velocity = 0;
-                        y_velocity = 0;
-                        snake_tail_vec = {};
-                        apples_eaten = 0;
+                        snake.need_turn = {};
+                        snake.x_velocity = 0;
+                        snake.y_velocity = 0;
+                        snake.snake_tail_vec = {};
+                        snake.apples_eaten = 0;
                         frame_count = 0;
                         adjustment = 0;
                         apple_sprite.setPosition({ -40 + 19.5 + (13 * 44), 70 + -25 + (8 * 44) });
@@ -1138,8 +1148,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                 window.draw(you_died_text_shadow);
                 window.draw(you_died_text);
                 
-                score_text.setString("Score: " + std::to_string(apples_eaten));
-                score_text_shadow.setString("Score: " + std::to_string(apples_eaten));
+                score_text.setString("Score: " + std::to_string(snake.apples_eaten));
+                score_text_shadow.setString("Score: " + std::to_string(snake.apples_eaten));
                 window.draw(score_text_shadow);
                 window.draw(score_text);
 
@@ -1168,7 +1178,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                         case SnakeColor::INKY: which_snake = "INKY"; break;
                         case SnakeColor::CLYDE: which_snake = "CLYDE"; break;
                         }
-                        outFile << which_snake << " " << apples_eaten << "\n";
+                        outFile << which_snake << " " << snake.apples_eaten << "\n";
                         outFile.close();
 
                         
@@ -1198,15 +1208,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                         case SnakeColor::INKY: which_snake = "INKY"; break;
                         case SnakeColor::CLYDE: which_snake = "CLYDE"; break;
                         }
-                        outFile << which_snake << " " << apples_eaten << "\n";
+                        outFile << which_snake << " " << snake.apples_eaten << "\n";
                         outFile.close();
 
                         //reset game values
-                        need_turn = {};
-                        x_velocity = 0;
-                        y_velocity = 0;
-                        snake_tail_vec = {};
-                        apples_eaten = 0;
+                        snake.need_turn = {};
+                        snake.x_velocity = 0;
+                        snake.y_velocity = 0;
+                        snake.snake_tail_vec = {};
+                        snake.apples_eaten = 0;
                         frame_count = 0;
                         adjustment = 0;
                         apple_sprite.setPosition({ -40 + 19.5 + (13 * 44), 70 + -25 + (8 * 44) });
@@ -1229,8 +1239,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                 window.draw(you_win_text_shadow);
                 window.draw(you_win_text);
 
-                win_score_text.setString("Score: " + std::to_string(apples_eaten));
-                win_score_text_shadow.setString("Score: " + std::to_string(apples_eaten));
+                win_score_text.setString("Score: " + std::to_string(snake.apples_eaten));
+                win_score_text_shadow.setString("Score: " + std::to_string(snake.apples_eaten));
                 window.draw(win_score_text_shadow);
                 window.draw(win_score_text);
 
@@ -1259,7 +1269,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                         case SnakeColor::INKY: which_snake = "INKY"; break;
                         case SnakeColor::CLYDE: which_snake = "CLYDE"; break;
                         }
-                        outFile << which_snake << " " << apples_eaten << "\n";
+                        outFile << which_snake << " " << snake.apples_eaten << "\n";
                         outFile.close();
 
 
@@ -1289,15 +1299,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                         case SnakeColor::INKY: which_snake = "INKY"; break;
                         case SnakeColor::CLYDE: which_snake = "CLYDE"; break;
                         }
-                        outFile << which_snake << " " << apples_eaten << "\n";
+                        outFile << which_snake << " " << snake.apples_eaten << "\n";
                         outFile.close();
 
                         //reset game values
-                        need_turn = {};
-                        x_velocity = 0;
-                        y_velocity = 0;
-                        snake_tail_vec = {};
-                        apples_eaten = 0;
+                        snake.need_turn = {};
+                        snake.x_velocity = 0;
+                        snake.y_velocity = 0;
+                        snake.snake_tail_vec = {};
+                        snake.apples_eaten = 0;
                         frame_count = 0;
                         adjustment = 0;
                         apple_sprite.setPosition({ -40 + 19.5 + (13 * 44), 70 + -25 + (8 * 44) });
@@ -1326,7 +1336,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 /*function definitions*/
 bool apple_is_on_snake(sf::Sprite& the_apple_sprite) {
-    TailVectorData& data = snake_tail_vec[0];
+    Snake::TailVectorData& data = snake.snake_tail_vec[0];
     for (auto& pos : data.every_position) { // sorry if this is disgusting
         float distance = distance_between_two_pos(pos, the_apple_sprite.getPosition());
         if (distance < 22) {
@@ -1368,12 +1378,12 @@ sf::Sprite rand_apple(sf::Sprite& the_apple_sprite) {
 
 void move_snake(sf::Sprite& head_sprite) {
    
-    TailVectorData& data = snake_tail_vec[0];
+    Snake::TailVectorData& data = snake.snake_tail_vec[0];
     sf::CircleShape& the_snake_circle = data.shape;
 
     /*direction: TSA-Screening*/
-    if (!need_turn.empty() && need_turn[0] == sf::Vector2f(x_velocity, y_velocity)) {
-        need_turn.pop_front();
+    if (!snake.need_turn.empty() && snake.need_turn[0] == sf::Vector2f(snake.x_velocity, snake.y_velocity)) {
+        snake.need_turn.pop_front();
     }
 
     /*direction: Boarding*/
@@ -1386,39 +1396,39 @@ void move_snake(sf::Sprite& head_sprite) {
     sf::Vector2f center_position = get_center_position_of_tile(current_tile.x, current_tile.y);
     
     // epsilon tolerance
-    float epsilon = std::max(0.5f, std::abs(uni_speed) / 2.f);// chat said this was better -> it is
+    float epsilon = std::max(0.5f, std::abs(snake.uni_speed) / 2.f);// chat said this was better -> it is
     bool at_center_turn_point =
         std::abs(center_position.x - (current_position.x + 20)) < epsilon &&
         std::abs(center_position.y - (current_position.y + 20)) < epsilon;
 
 
 
-    sf::Vector2f current_velocity = sf::Vector2f(x_velocity, y_velocity);
+    sf::Vector2f current_velocity = sf::Vector2f(snake.x_velocity, snake.y_velocity);
     
 
     /*direction: Lift - off*/ 
     sf::Vector2f where_tail_turn = sf::Vector2f(-1.f, -1.f);
-    if (at_center_turn_point && !need_turn.empty()) {
-        if (!(x_velocity == -need_turn[0].x) && !(y_velocity == -need_turn[0].y) || (x_velocity == 0.f && y_velocity == 0.f)) {
-            x_velocity = need_turn[0].x;
-            y_velocity = need_turn[0].y;
+    if (at_center_turn_point && !snake.need_turn.empty()) {
+        if (!(snake.x_velocity == -snake.need_turn[0].x) && !(snake.y_velocity == -snake.need_turn[0].y) || (snake.x_velocity == 0.f && snake.y_velocity == 0.f)) {
+            snake.x_velocity = snake.need_turn[0].x;
+            snake.y_velocity = snake.need_turn[0].y;
             where_tail_turn = the_snake_circle.getPosition();
-            if (x_velocity > 0) head_sprite.setRotation(sf::degrees(0.f));
-            if (x_velocity < 0) head_sprite.setRotation(sf::degrees(180.f));
-            if (y_velocity > 0) head_sprite.setRotation(sf::degrees(90.f));
-            if (y_velocity < 0) head_sprite.setRotation(sf::degrees(270.f));
+            if (snake.x_velocity > 0) head_sprite.setRotation(sf::degrees(0.f));
+            if (snake.x_velocity < 0) head_sprite.setRotation(sf::degrees(180.f));
+            if (snake.y_velocity > 0) head_sprite.setRotation(sf::degrees(90.f));
+            if (snake.y_velocity < 0) head_sprite.setRotation(sf::degrees(270.f));
         }
-        need_turn.pop_front();
+        snake.need_turn.pop_front();
     }
     
     
-     the_snake_circle.move(sf::Vector2f(x_velocity, y_velocity));
+     the_snake_circle.move(sf::Vector2f(snake.x_velocity, snake.y_velocity));
      
 
      data.every_position.push_back(the_snake_circle.getPosition());
 
      
-     if (data.every_position.size() > (25*17* movement_offset)+2) {
+     if (data.every_position.size() > (25*17* snake.movement_offset)+2) {
          data.every_position.pop_front();
          adjustment++;
      }
@@ -1456,21 +1466,21 @@ void add_tail(sf::CircleShape& last_tail) {
     sf::Vector2f tail_pos = last_tail.getPosition();
     new_snake_tail.setPosition(tail_pos);
 
-    TailVectorData data;
+    Snake::TailVectorData data;
     data.shape = new_snake_tail;
     data.active = false;
 
-    snake_tail_vec.push_back(data);
+    snake.snake_tail_vec.push_back(data);
 }
 
 void move_tail(sf::CircleShape& current_tail, bool ready_to_move, int tail_iteration) {
 
-    TailVectorData& positions = snake_tail_vec[0];
+    Snake::TailVectorData& positions = snake.snake_tail_vec[0];
 
     if (!ready_to_move){ 
         return;
     }
-    int frame = frame_count - (movement_offset * tail_iteration) - adjustment; // movement_offset is just for distancing bewteen tails
+    int frame = frame_count - (snake.movement_offset * tail_iteration) - adjustment; // movement_offset is just for distancing bewteen tails
     if (frame > positions.every_position.size()) frame = positions.every_position.size()-1;
 
     current_tail.setPosition(positions.every_position[frame]);
@@ -1495,10 +1505,10 @@ void setup_snake(sf::Sprite& head_sprite) {
     snake_head.setOutlineColor(sf::Color::Black);
     snake_head.setOutlineThickness(1.f);
 
-    TailVectorData data;
+    Snake::TailVectorData data;
     data.shape = snake_head;
     data.active = true;
-    snake_tail_vec.push_back(data);
+    snake.snake_tail_vec.push_back(data);
     /*Snake_head--End*/
 
     //change amount for fun
