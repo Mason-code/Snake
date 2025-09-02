@@ -17,9 +17,14 @@
 #include <fstream>
 #include <sstream>
 #include <algorithm>
+// no windows.h in the browser
 
 
-#include <windows.h>
+#ifdef __EMSCRIPTEN__
+#include <emscripten/emscripten.h>
+#include <emscripten/html5.h>
+#endif
+
 
 
 //#include <imgui.h>
@@ -99,8 +104,19 @@ void setup_snake(sf::Sprite& head_sprite);
 void move_snake(sf::Sprite& head_sprite);
 
 
+#ifdef __EMSCRIPTEN__
+EM_ASM({
+  FS.mkdir('/persistent');
+  FS.mount(IDBFS, {}, '/persistent');
+  FS.syncfs(true, function(err) {
+    if (err) console.error('IDBFS init sync error:', err);
+  });
+    });
+#endif
+
+
 // my int main() was being weird so i guess we are doing this now T^T
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) 
+int main()
 
 {
 
@@ -585,13 +601,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     sf::Music background_music;
     if (!background_music.openFromFile("snake_game_audio.ogg")) return -1; // error
     background_music.setVolume(60);
-    background_music.setLooping(true); 
     
 
     sf::Music selection_music;
     if (!selection_music.openFromFile("snake_selection_audio.ogg")) return -1; // error
     selection_music.setVolume(100);
-    selection_music.setLooping(true);
+
 
     sf::Music apple_crunch;
     if (!apple_crunch.openFromFile("apple_crunch.ogg")) return -1; // error
@@ -861,7 +876,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                 };
                 std::vector<ScoreInfo> score_info_vec;
 
-                std::ifstream inFile("scoreboard.txt");
+                std::ifstream inFile("persistent/scoreboard.txt");
                 if (!inFile) {
                     std::cerr << "Error: could not open file for reading.\n";
                     return 0;
@@ -949,6 +964,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
                         setup_snake(head_sprite);
                         current_state = GameState::GAME_PLAY;
+                        background_music.setLooping(true);
                         sf::sleep(sf::seconds(.3f));
 
                     }
@@ -961,8 +977,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                         button_click.play();
                         current_state = GameState::PLAYER_SELECTION;
                         state_changed = true;
+                        selection_music.setLooping(true);
                         sf::sleep(sf::seconds(.3f));
-
                     }
                 }else {
                     player_slctn_btn_rectangle.setOutlineColor(sf::Color::Transparent);
@@ -1165,7 +1181,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                     if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
                         button_click.play();
                         // save data for scoreboard 
-                        std::ofstream outFile("scoreboard.txt", std::ios::app);  // open in append mode
+                        std::ofstream outFile("persistent/scoreboard.txt", std::ios::app);  // open in append mode
                         if (!outFile) {
                             std::cerr << "Error: could not open file for appending.\n";
                             return 0;
@@ -1181,7 +1197,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                         outFile << which_snake << " " << snake.apples_eaten << "\n";
                         outFile.close();
 
-                        
+                        #ifdef __EMSCRIPTEN__
+                        EM_ASM({
+                            FS.syncfs(false, function(err) {
+                                if (err) console.error('IDBFS write sync error:', err);
+                            });
+                        });
+                        #endif
+
                         current_state = GameState::MAIN_MENU;
                         sf::sleep(sf::seconds(.3f));
                     }
@@ -1210,6 +1233,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                         }
                         outFile << which_snake << " " << snake.apples_eaten << "\n";
                         outFile.close();
+
+                        #ifdef __EMSCRIPTEN__
+                        EM_ASM({
+                            FS.syncfs(false, function(err) {
+                                if (err) console.error('IDBFS write sync error:', err);
+                            });
+                        });
+                        #endif
+
 
                         //reset game values
                         snake.need_turn = {};
@@ -1272,6 +1304,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                         outFile << which_snake << " " << snake.apples_eaten << "\n";
                         outFile.close();
 
+                        #ifdef __EMSCRIPTEN__
+                        EM_ASM({
+                            FS.syncfs(false, function(err) {
+                                if (err) console.error('IDBFS write sync error:', err);
+                            });
+                        });
+                        #endif
+
 
                         current_state = GameState::MAIN_MENU;
                         sf::sleep(sf::seconds(.3f));
@@ -1301,6 +1341,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                         }
                         outFile << which_snake << " " << snake.apples_eaten << "\n";
                         outFile.close();
+
+                        #ifdef __EMSCRIPTEN__
+                        EM_ASM({
+                            FS.syncfs(false, function(err) {
+                                if (err) console.error('IDBFS write sync error:', err);
+                            });
+                        });
+                        #endif
 
                         //reset game values
                         snake.need_turn = {};
